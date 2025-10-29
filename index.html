@@ -201,7 +201,9 @@
           done: '✨ Beautiful! Write more...',
           clear: '🌟 Letter cleared!',
           recording: '🔴 Recording...',
-          saved: '💫 Video saved!'
+          saved: '💫 Video saved!',
+          cameraBack: '📷 Back Camera (Main)',
+          cameraFront: '📷 Front Camera'
         },
         instructions: {
           title: '🎄 Magical Christmas Letter 🎄',
@@ -214,7 +216,7 @@
           record: '🎥 Record',
           stop: '⏹ Stop',
           lang: '🇺🇦 UA',
-          camera: '📷 Switch'
+          camera: '📷 Switch Camera'
         },
         header: '🎅 Christmas Letter to Santa'
       },
@@ -226,7 +228,9 @@
           done: '✨ Чудово! Пиши ще...',
           clear: '🌟 Лист очищено!',
           recording: '🔴 Запис...',
-          saved: '💫 Відео збережено!'
+          saved: '💫 Відео збережено!',
+          cameraBack: '📷 Задня камера (основна)',
+          cameraFront: '📷 Передня камера'
         },
         instructions: {
           title: '🎄 Чарівний Різдвяний Лист 🎄',
@@ -239,7 +243,7 @@
           record: '🎥 Запис',
           stop: '⏹ Стоп',
           lang: '🇺🇸 EN',
-          camera: '📷 Камера'
+          camera: '📷 Перемкнути камеру'
         },
         header: '🎅 Лист до Санти'
       }
@@ -255,7 +259,7 @@
     let isRecording = false;
     let fingerTrail = [];
     let videoElement;
-    let currentCamera = 'environment'; // Задня камера за замовчуванням
+    let currentCamera = 'environment'; // Задня камера за замовчуванням (основна)
     let cameraStream = null;
 
     // === Елементи ===
@@ -266,6 +270,16 @@
     const clearBtn = document.getElementById('clearBtn');
     const langBtn = document.getElementById('langBtn');
     const cameraBtn = document.getElementById('cameraBtn');
+
+    // === Оновлення тексту кнопки камери ===
+    function updateCameraButtonText() {
+      const t = translations[currentLang];
+      if (currentCamera === 'environment') {
+        cameraBtn.textContent = t.status.cameraBack;
+      } else {
+        cameraBtn.textContent = t.status.cameraFront;
+      }
+    }
 
     // === Сніжинки ===
     function createSnowflakes() {
@@ -585,29 +599,50 @@
 
     // === Перемикання камери ===
     async function switchCamera() {
+      const t = translations[currentLang];
       if (cameraStream) {
         cameraStream.getTracks().forEach(track => track.stop());
       }
       
       currentCamera = currentCamera === 'environment' ? 'user' : 'environment';
-      await startCamera();
+      status.textContent = `🔄 Switching to ${currentCamera === 'environment' ? (currentLang === 'en' ? 'back' : 'задню') : (currentLang === 'en' ? 'front' : 'передню')} camera...`;
+      
+      try {
+        await startCamera();
+        updateCameraButtonText();
+        status.textContent = t.status.initial;
+      } catch (error) {
+        console.error('Camera switch error:', error);
+        status.textContent = `❌ ${currentLang === 'en' ? 'Camera not available' : 'Камера недоступна'}. Using previous.`;
+        // Fallback to previous camera
+        currentCamera = currentCamera === 'environment' ? 'user' : 'environment';
+        await startCamera();
+        updateCameraButtonText();
+      }
     }
 
-    // === Запуск камери ===
+    // === Запуск камери з адаптацією ===
     async function startCamera() {
       try {
         videoElement = document.getElementById('video');
         
-        // Спершу намагаємось отримати задню камеру
         let constraints = {
           video: {
-            facingMode: currentCamera,
+            facingMode: { exact: currentCamera }, // Використовуємо exact для точного режиму
             width: { ideal: 1280 },
             height: { ideal: 720 }
           }
         };
 
-        cameraStream = await navigator.mediaDevices.getUserMedia(constraints);
+        // Якщо exact не вдається, пробуємо без exact (адаптація)
+        try {
+          cameraStream = await navigator.mediaDevices.getUserMedia(constraints);
+        } catch (exactError) {
+          console.warn(`Exact ${currentCamera} camera failed, trying ideal:`, exactError);
+          constraints.video.facingMode = { ideal: currentCamera };
+          cameraStream = await navigator.mediaDevices.getUserMedia(constraints);
+        }
+
         videoElement.srcObject = cameraStream;
         
         // Запускаємо MediaPipe
@@ -629,16 +664,22 @@
         
       } catch (error) {
         console.error('Camera error:', error);
+        const t = translations[currentLang];
         
-        // Якщо задня камера не працює, пробуємо передню
+        // Адаптація: якщо задня не доступна, перемикаємо на передню
         if (currentCamera === 'environment') {
+          status.textContent = `${t.status.cameraBack} not available, switching to ${t.status.cameraFront}...`;
           currentCamera = 'user';
-          setTimeout(startCamera, 500);
+          updateCameraButtonText();
+          return await startCamera(); // Рекурсивний виклик для fallback
+        } else {
+          status.textContent = `❌ ${t.status.cameraFront} not available. Please check permissions.`;
+          throw error; // Якщо і фронтальна не працює, кидаємо помилку
         }
       }
     }
 
-    // === Інші функції залишаються аналогічними ===
+    // === Інші функції ===
     function clearText() {
       const t = translations[currentLang];
       while (textGroup.children.length > 0) {
@@ -669,7 +710,7 @@
       clearBtn.textContent = t.buttons.clear;
       recordBtn.textContent = isRecording ? t.buttons.stop : t.buttons.record;
       langBtn.textContent = t.buttons.lang;
-      cameraBtn.textContent = t.buttons.camera;
+      updateCameraButtonText(); // Оновлюємо текст кнопки камери
       
       createChristmasLetter();
     }
@@ -696,8 +737,9 @@
 
         hands.onResults(onResults);
 
-        // Запускаємо камеру
+        // Запускаємо камеру (основна - задня з адаптацією)
         await startCamera();
+        updateCameraButtonText(); // Встановлюємо початковий текст кнопки
 
         // Обробники подій
         langBtn.onclick = () => switchLanguage(currentLang === 'en' ? 'uk' : 'en');
@@ -772,4 +814,3 @@
   </script>
 </body>
 </html>
-    
