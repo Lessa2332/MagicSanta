@@ -1,185 +1,85 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="uk">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>🎅 Christmas AR Letter</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+  <title>🎅 Різдвяний AR-лист — дитяча версія</title>
+
+  <!-- Дружній шрифт -->
+  <link href="https://fonts.googleapis.com/css2?family=Patrick+Hand&family=Nunito:wght@400;700&display=swap" rel="stylesheet">
+
   <style>
-    * { 
-      margin: 0; 
-      padding: 0; 
-      box-sizing: border-box; 
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0;font-family:"Nunito", "Patrick Hand", system-ui, sans-serif;background:linear-gradient(135deg,#ffe6f2,#e6f7ff);color:#222;overflow:hidden}
+    #container{position:relative;width:100vw;height:100vh}
+    canvas{display:block;width:100%;height:100%}
+    #video{display:none}
+    /* UI */
+    #ui{
+      position:absolute;left:12px;right:12px;top:12px;z-index:120;display:flex;gap:12px;align-items:center;justify-content:space-between;
+      background:linear-gradient(180deg, rgba(255,255,255,0.9), rgba(255,255,255,0.85));
+      border-radius:18px;padding:12px;border:2px solid rgba(255,193,7,0.18);box-shadow:0 8px 30px rgba(0,0,0,0.12)
     }
-    
-    body { 
-      overflow: hidden; 
-      font-family: 'Georgia', serif; 
-      background: linear-gradient(135deg, #0c1445, #1a237e);
-      color: white;
+    #status{font-weight:700;font-size:18px;color:#b71c1c; display:flex; align-items:center; gap:8px;}
+    .controls{display:flex;gap:8px;align-items:center}
+    .big-btn{
+      border:none;padding:12px 18px;border-radius:14px;font-weight:700;font-size:16px;cursor:pointer;
+      display:inline-flex;gap:8px;align-items:center;justify-content:center;
+      box-shadow:0 8px 20px rgba(0,0,0,0.12);
+      user-select:none;
     }
-    
-    #container { 
-      position: relative; 
-      width: 100vw; 
-      height: 100vh; 
+    .btn-primary{background:linear-gradient(135deg,#ff6f61,#ff3b30);color:white}
+    .btn-clear{background:linear-gradient(135deg,#42a5f5,#1976d2);color:white}
+    .btn-camera{background:linear-gradient(135deg,#7b1fa2,#9c27b0);color:white}
+    .btn-lang{background:linear-gradient(135deg,#43a047,#66bb6a);color:white}
+    .btn-record.recording{animation:recordPulse 1.5s infinite}
+    @keyframes recordPulse{
+      0%{box-shadow:0 0 0 0 rgba(244,67,54,0.4)}
+      70%{box-shadow:0 0 0 12px rgba(244,67,54,0)}
+      100%{box-shadow:0 0 0 0 rgba(244,67,54,0)}
     }
-    
-    canvas { 
-      display: block; 
-      width: 100%;
-      height: 100%;
-    }
-    
-    #ui {
-      position: absolute; 
-      top: 20px; 
-      left: 20px; 
-      right: 20px;
-      display: flex; 
-      justify-content: space-between; 
-      align-items: center;
-      z-index: 100;
-      font-size: 16px;
-      background: rgba(0, 0, 0, 0.7);
-      padding: 12px 20px;
-      border-radius: 15px;
-      backdrop-filter: blur(10px);
-      border: 1px solid rgba(255, 215, 0, 0.3);
-      box-shadow: 0 4px 20px rgba(255, 215, 0, 0.2);
-    }
-    
-    button {
-      background: linear-gradient(135deg, #d32f2f, #f44336);
-      color: white; 
-      border: none;
-      padding: 12px 20px; 
-      border-radius: 25px; 
-      font-weight: bold;
-      font-family: 'Georgia', serif;
-      box-shadow: 0 4px 15px rgba(211, 47, 47, 0.4);
-      cursor: pointer;
-      transition: all 0.3s ease;
-      margin-left: 8px;
-      font-size: 14px;
-    }
-    
-    button:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(211, 47, 47, 0.6);
-    }
-    
-    #status { 
-      color: #ffd700; 
-      font-size: 16px;
-      text-shadow: 0 2px 4px rgba(0,0,0,0.5);
-      font-weight: bold;
-    }
-    
-    #controls {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-    
-    #clearBtn {
-      background: linear-gradient(135deg, #1976d2, #42a5f5);
-    }
-    
-    #langBtn {
-      background: linear-gradient(135deg, #388e3c, #4caf50);
-      padding: 10px 16px;
-    }
-    
-    #cameraBtn {
-      background: linear-gradient(135deg, #7b1fa2, #9c27b0);
-      padding: 10px 16px;
-    }
-    
-    #instructions {
-      position: absolute;
-      bottom: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      text-align: center;
-      background: rgba(0, 0, 0, 0.8);
-      padding: 15px 25px;
-      border-radius: 15px;
-      backdrop-filter: blur(10px);
-      border: 1px solid rgba(255, 215, 0, 0.3);
-      max-width: 90%;
-      box-shadow: 0 4px 20px rgba(255, 215, 0, 0.2);
-    }
-    
-    #instructions h3 {
-      margin-bottom: 8px;
-      color: #ffd700;
-    }
-    
-    #instructions p {
-      margin-bottom: 5px;
-      font-size: 14px;
-      color: #e3f2fd;
-    }
-    
-    .pulse {
-      animation: pulse 2s infinite;
-    }
-    
-    @keyframes pulse {
-      0% { opacity: 0.7; }
-      50% { opacity: 1; }
-      100% { opacity: 0.7; }
-    }
-    
-    .success {
-      color: #4caf50 !important;
-    }
-    
-    .recording {
-      background: linear-gradient(135deg, #e74c3c, #c0392b) !important;
-      animation: recordingPulse 1.5s infinite;
-    }
-    
-    @keyframes recordingPulse {
-      0% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.7); }
-      70% { box-shadow: 0 0 0 10px rgba(231, 76, 60, 0); }
-      100% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0); }
+    #instructions{
+      position:absolute;left:50%;transform:translateX(-50%);bottom:18px;z-index:110;
+      background:linear-gradient(180deg,rgba(255,255,255,0.95),rgba(255,255,255,0.9));padding:12px 18px;border-radius:14px;border:1px solid rgba(0,0,0,0.06);
+      font-size:15px;max-width:94%;text-align:center;box-shadow:0 8px 30px rgba(0,0,0,0.08)
     }
 
-    .snowflake {
-      position: absolute;
-      color: white;
-      font-size: 20px;
-      user-select: none;
-      pointer-events: none;
-      z-index: 1;
-    }
+    /* Snow UI overlay for kids (2D snow) */
+    #snowflakes{position:absolute;inset:0;pointer-events:none;z-index:2}
+    .snow{position:absolute;font-size:18px;opacity:0.95;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.2))}
+
+    /* Tiny hint */
+    #helpBubble{position:absolute;left:12px;bottom:120px;background:rgba(255,255,255,0.98);padding:10px 12px;border-radius:12px;border:1px solid rgba(0,0,0,0.05);box-shadow:0 6px 18px rgba(0,0,0,0.08);z-index:115;font-size:14px}
+    #cameraList{display:none;position:absolute;top:64px;right:12px;background:white;border-radius:10px;padding:8px;border:1px solid rgba(0,0,0,0.06);z-index:130;box-shadow:0 8px 30px rgba(0,0,0,0.12)}
+    #cameraList button {display:block;width:240px;text-align:left;padding:8px;border-radius:8px;background:transparent;border:none;cursor:pointer}
   </style>
 </head>
 <body>
   <div id="container">
-    <video id="video" playsinline style="display:none;"></video>
+    <video id="video" playsinline></video>
     <canvas id="canvas"></canvas>
 
-    <!-- Сніжинки -->
     <div id="snowflakes"></div>
 
-    <div id="ui">
-      <div id="status">🎅 Point your finger to write...</div>
-      <div id="controls">
-        <button id="langBtn">🇺🇦 UA</button>
-        <button id="cameraBtn">📷 Switch Camera</button>
-        <button id="clearBtn">✨ Clear</button>
-        <button id="recordBtn">🎥 Record</button>
+    <div id="ui" role="region" aria-label="controls">
+      <div id="status">🎅 Наведи палець, щоб писати...</div>
+
+      <div class="controls" aria-hidden="false">
+        <button id="langBtn" class="big-btn btn-lang" title="Змінити мову">🇺🇦 UA</button>
+        <button id="cameraBtn" class="big-btn btn-camera" title="Перемикати камеру">📷 Камера</button>
+        <button id="clearBtn" class="big-btn btn-clear" title="Очистити лист">✨ Очистити</button>
+        <button id="recordBtn" class="big-btn btn-primary" title="Записати відео">🎥 Запис</button>
       </div>
     </div>
-    
+
+    <div id="cameraList" aria-hidden="true"></div>
+
     <div id="instructions">
-      <h3>🎄 Magical Christmas Letter 🎄</h3>
-      <p>1. Show your index finger to the camera</p>
-      <p>2. Extend finger to write in the air ✍️</p>
-      <p>3. Bend finger to finish the stroke</p>
+      <strong>🎄 Чарівний Різдвяний Лист</strong>
+      <div style="margin-top:8px">1. Покажи вказівний палець камері — почнеться слід ✨<br>2. Витягни палець щоб писати, зігни — щоб закінчити</div>
     </div>
+
+    <div id="helpBubble">Підказка: натисни "Камера" — перемикає фізичні камери</div>
   </div>
 
   <!-- Three.js -->
@@ -191,593 +91,383 @@
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
 
   <script>
-    // Language support
+    // Реклама (делікатно)
+    console.log("Пробуйте інші AR/AI інструменти на https://gptonline.ai/");
+
+    // --- Переклади (укр/англ) ---
     const translations = {
       en: {
         title: '🎅 Christmas AR Letter',
         status: {
           initial: '🎅 Point your finger to write...',
           drawing: '✍️ Writing magical letter...',
-          done: '✨ Beautiful! Write more...',
+          done: '✨ Nice! Write more...',
           clear: '🌟 Letter cleared!',
           recording: '🔴 Recording...',
-          saved: '💫 Video saved!',
-          cameraBack: '📷 Back Camera (Main)',
-          cameraFront: '📷 Front Camera'
+          saved: '💫 Video saved!'
         },
-        instructions: {
-          title: '🎄 Magical Christmas Letter 🎄',
-          step1: '1. Show your index finger to the camera',
-          step2: '2. Extend finger to write in the air ✍️',
-          step3: '3. Bend finger to finish the stroke'
-        },
-        buttons: {
-          clear: '✨ Clear',
-          record: '🎥 Record',
-          stop: '⏹ Stop',
-          lang: '🇺🇦 UA',
-          camera: '📷 Switch Camera'
-        },
-        header: '🎅 Christmas Letter to Santa'
+        buttons: { clear: '✨ Clear', record: '🎥 Record', stop: '⏹ Stop', lang: '🇺🇦 UA', camera: '📷 Switch' },
+        header: '🎅 Letter to Santa'
       },
       uk: {
         title: '🎅 Різдвяний AR-лист',
         status: {
-          initial: '🎅 Наведи палець щоб писати...',
+          initial: '🎅 Наведи палець, щоб писати...',
           drawing: '✍️ Пишу чарівний лист...',
           done: '✨ Чудово! Пиши ще...',
           clear: '🌟 Лист очищено!',
           recording: '🔴 Запис...',
-          saved: '💫 Відео збережено!',
-          cameraBack: '📷 Задня камера (основна)',
-          cameraFront: '📷 Передня камера'
+          saved: '💫 Відео збережено!'
         },
-        instructions: {
-          title: '🎄 Чарівний Різдвяний Лист 🎄',
-          step1: '1. Покажіть вказівний палець камері',
-          step2: '2. Витягніть палець щоб писати ✍️',
-          step3: '3. Зігніть палець щоб закінчити'
-        },
-        buttons: {
-          clear: '✨ Очистити',
-          record: '🎥 Запис',
-          stop: '⏹ Стоп',
-          lang: '🇺🇸 EN',
-          camera: '📷 Перемкнути камеру'
-        },
+        buttons: { clear: '✨ Очистити', record: '🎥 Запис', stop: '⏹ Стоп', lang: '🇺🇸 EN', camera: '📷 Камера' },
         header: '🎅 Лист до Санти'
       }
     };
+    let currentLang = 'uk';
 
-    let currentLang = 'en';
-    let camera, scene, renderer, letter, textGroup;
-    let hands;
-    let isDrawing = false;
-    let currentPath = [];
-    let recordedChunks = [];
-    let mediaRecorder;
-    let isRecording = false;
-    let fingerTrail = [];
-    let videoElement;
-    let currentCamera = 'environment'; // Задня камера за замовчуванням (основна)
+    // --- Глобальні змінні ---
+    let scene, renderer, camera3;
+    let letterMesh, textGroup, fingerTrail = [];
+    let isDrawing = false, currentPath = [];
+    let hands, cameraProcessor, videoEl, canvasEl;
+    let mediaRecorder, recordedChunks = [], isRecording = false;
+
+    // Камери
+    let devices = [];
+    let currentDeviceIndex = 0;
     let cameraStream = null;
 
-    // === Елементи ===
-    const video = document.getElementById('video');
-    const canvas = document.getElementById('canvas');
-    const status = document.getElementById('status');
+    // UI елементи
+    const statusEl = document.getElementById('status');
     const recordBtn = document.getElementById('recordBtn');
     const clearBtn = document.getElementById('clearBtn');
     const langBtn = document.getElementById('langBtn');
     const cameraBtn = document.getElementById('cameraBtn');
+    const cameraListEl = document.getElementById('cameraList');
 
-    // === Оновлення тексту кнопки камери ===
-    function updateCameraButtonText() {
-      const t = translations[currentLang];
-      if (currentCamera === 'environment') {
-        cameraBtn.textContent = t.status.cameraBack;
-      } else {
-        cameraBtn.textContent = t.status.cameraFront;
+    // Ініціалізація звуку через WebAudio (короткі тональні ефекти)
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    const audioCtx = AudioCtx ? new AudioCtx() : null;
+    function playTone(freq=660, duration=0.08) {
+      if (!audioCtx) return;
+      const o = audioCtx.createOscillator();
+      const g = audioCtx.createGain();
+      o.type = 'sine'; o.frequency.value = freq;
+      g.gain.value = 0.0001;
+      o.connect(g); g.connect(audioCtx.destination);
+      const now = audioCtx.currentTime;
+      g.gain.exponentialRampToValueAtTime(0.12, now + 0.005);
+      o.start(now);
+      g.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+      o.stop(now + duration + 0.02);
+    }
+
+    // --- Snow (2D) for kids ---
+    function createSnowUI() {
+      const container = document.getElementById('snowflakes');
+      for (let i=0;i<24;i++){
+        const s = document.createElement('div');
+        s.className = 'snow';
+        s.textContent = '❄';
+        const left = Math.random()*100;
+        s.style.left = left+'vw';
+        s.style.top = -Math.random()*20 + 'vh';
+        const dur = (Math.random()*6+4).toFixed(1);
+        s.style.animation = `fall${i} ${dur}s linear infinite`;
+        s.style.opacity = 0.8 + Math.random()*0.2;
+        container.appendChild(s);
+
+        // create keyframes dynamically
+        const style = document.createElement('style');
+        style.textContent = `
+          @keyframes fall${i} {
+            0% { transform: translateY(-10vh) rotate(0deg); opacity:0 }
+            10% { opacity:1 }
+            100% { transform: translateY(120vh) rotate(360deg); opacity:0.9 }
+          }`;
+        document.head.appendChild(style);
       }
     }
 
-    // === Сніжинки ===
-    function createSnowflakes() {
-      const snowContainer = document.getElementById('snowflakes');
-      for (let i = 0; i < 15; i++) {
-        const snowflake = document.createElement('div');
-        snowflake.className = 'snowflake';
-        snowflake.innerHTML = '❄';
-        snowflake.style.left = Math.random() * 100 + 'vw';
-        snowflake.style.animationDelay = Math.random() * 5 + 's';
-        snowflake.style.animation = `fall ${Math.random() * 3 + 2}s linear infinite`;
-        snowContainer.appendChild(snowflake);
-      }
-    }
-
-    // Додаємо стилі для анімації сніжинок
-    const style = document.createElement('style');
-    style.textContent = `
-      @keyframes fall {
-        0% { transform: translateY(-100px) rotate(0deg); opacity: 0; }
-        10% { opacity: 1; }
-        90% { opacity: 1; }
-        100% { transform: translateY(100vh) rotate(360deg); opacity: 0; }
-      }
-    `;
-    document.head.appendChild(style);
-
-    // === Three.js ініціалізація ===
+    // --- THREE init ---
     function initThree() {
-      scene = new THREE.Scene();
-      scene.background = new THREE.Color(0x0c1445);
-      
-      camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 100);
-      camera.position.set(0, 0, 4);
-
-      renderer = new THREE.WebGLRenderer({ 
-        canvas: canvas, 
-        alpha: true, 
-        antialias: true,
-        preserveDrawingBuffer: true
-      });
-      renderer.setSize(window.innerWidth, window.innerHeight);
+      const canvas = document.getElementById('canvas');
+      renderer = new THREE.WebGLRenderer({ canvas, antialias:true, alpha:true, preserveDrawingBuffer:true });
       renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-      renderer.shadowMap.enabled = true;
-      renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      scene = new THREE.Scene();
+      scene.background = new THREE.Color(0x000000); // transparent feel
 
-      // Різдвяне освітлення
-      const ambientLight = new THREE.AmbientLight(0xffd700, 0.4);
-      scene.add(ambientLight);
-      
-      const directionalLight = new THREE.DirectionalLight(0xff6b6b, 0.8);
-      directionalLight.position.set(5, 10, 7);
-      directionalLight.castShadow = true;
-      scene.add(directionalLight);
+      camera3 = new THREE.PerspectiveCamera(60, window.innerWidth/window.innerHeight, 0.1, 100);
+      camera3.position.set(0,0,4);
 
-      const pointLight = new THREE.PointLight(0x4fc3f7, 0.6, 10);
-      pointLight.position.set(-3, 2, 3);
-      scene.add(pointLight);
+      // lights
+      const amb = new THREE.AmbientLight(0xfff7e6, 0.6);
+      scene.add(amb);
+      const dir = new THREE.DirectionalLight(0xfff1c4, 0.9);
+      dir.position.set(3,5,5); scene.add(dir);
 
-      // Створення різдвяного листа
+      // letter
       createChristmasLetter();
-      
-      // Група для тексту
-      textGroup = new THREE.Group();
-      scene.add(textGroup);
 
-      // Анімація
+      // group for strokes
+      textGroup = new THREE.Group(); scene.add(textGroup);
+
       animate();
     }
 
-    // === Створення різдвяного листа ===
-    function createChristmasLetter() {
-      if (letter) scene.remove(letter);
-      
-      const letterGeometry = new THREE.PlaneGeometry(2.8, 3.8);
-      const letterTexture = createChristmasTexture();
-      
-      const letterMaterial = new THREE.MeshLambertMaterial({ 
-        map: letterTexture,
-        transparent: true,
-        opacity: 0.95,
-        side: THREE.DoubleSide
-      });
-      
-      letter = new THREE.Mesh(letterGeometry, letterMaterial);
-      letter.position.set(0, 0, -1);
-      letter.rotation.x = -0.1;
-      letter.castShadow = true;
-      letter.receiveShadow = true;
-      scene.add(letter);
+    function createChristmasLetter(){
+      if (letterMesh) { scene.remove(letterMesh); letterMesh.geometry.dispose(); }
+      const geom = new THREE.PlaneGeometry(2.8,3.8,1,1);
 
-      // Додаємо різдвяні декорації
-      addChristmasDecorations();
+      // use canvas texture like before
+      const tex = makeLetterTexture();
+      const mat = new THREE.MeshStandardMaterial({ map:tex, roughness:0.7, metalness:0.1, transparent:true, side:THREE.DoubleSide });
+      letterMesh = new THREE.Mesh(geom, mat);
+      letterMesh.position.set(0,0,-1);
+      letterMesh.rotation.x = -0.07;
+      scene.add(letterMesh);
+      // small decorative floating snow spheres
+      for (let i=0;i<6;i++){
+        const s = new THREE.Mesh(new THREE.SphereGeometry(0.03,8,8), new THREE.MeshStandardMaterial({ color:0xffffff, emissive:0xaaffff, emissiveIntensity:0.2 }));
+        s.position.set((Math.random()-0.5)*3,(Math.random()-0.5)*2+0.8,-0.5+Math.random()*0.2);
+        scene.add(s);
+      }
     }
 
-    // === Різдвяна текстура ===
-    function createChristmasTexture() {
+    function makeLetterTexture(){
       const t = translations[currentLang];
-      const canvas = document.createElement('canvas');
-      canvas.width = 1024;
-      canvas.height = 1024;
-      const ctx = canvas.getContext('2d');
-      
-      // Фон - різдвяний градієнт
-      const gradient = ctx.createLinearGradient(0, 0, 1024, 1024);
-      gradient.addColorStop(0, '#fff8e1');
-      gradient.addColorStop(1, '#ffecb3');
-      ctx.fillStyle = gradient;
-      ctx.fillRect(0, 0, 1024, 1024);
-      
-      // Різдвяний візерунок
-      ctx.fillStyle = 'rgba(211, 47, 47, 0.1)';
-      for (let i = 0; i < 300; i++) {
-        const x = Math.random() * 1024;
-        const y = Math.random() * 1024;
-        const size = Math.random() * 40 + 10;
-        ctx.beginPath();
-        ctx.arc(x, y, size, 0, Math.PI * 2);
-        ctx.fill();
-      }
-      
-      // Золоті кути
-      ctx.strokeStyle = '#ffd700';
-      ctx.lineWidth = 25;
-      ctx.strokeRect(50, 50, 924, 924);
-      
-      // Заголовок
-      ctx.fillStyle = '#d32f2f';
-      ctx.font = 'bold 60px Georgia';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText(t.header, 512, 120);
-      
-      // Різдвяні ілюстрації
-      drawChristmasElements(ctx);
-      
-      const texture = new THREE.CanvasTexture(canvas);
-      texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
-      return texture;
+      const c = document.createElement('canvas');
+      c.width = 1024; c.height = 1024;
+      const ctx = c.getContext('2d');
+
+      // background
+      const g = ctx.createLinearGradient(0,0,1024,1024);
+      g.addColorStop(0, '#fff8e1');
+      g.addColorStop(1, '#ffecb3');
+      ctx.fillStyle = g; ctx.fillRect(0,0,1024,1024);
+
+      // border
+      ctx.strokeStyle = '#ffd700'; ctx.lineWidth = 28; ctx.strokeRect(48,48,928,928);
+
+      // title
+      ctx.fillStyle = '#b71c1c'; ctx.font = 'bold 64px "Patrick Hand", Georgia'; ctx.textAlign='center';
+      ctx.fillText(t.header || '', 512, 120);
+
+      // simple decorations
+      ctx.fillStyle='#2e7d32'; ctx.beginPath(); ctx.moveTo(140,760); ctx.lineTo(100,630); ctx.lineTo(180,630); ctx.fill();
+      ctx.fillStyle='#d32f2f'; ctx.beginPath(); ctx.arc(200,680,14,0,Math.PI*2); ctx.fill();
+
+      return new THREE.CanvasTexture(c);
     }
 
-    function drawChristmasElements(ctx) {
-      // Ялинки по боках
-      ctx.fillStyle = '#2e7d32';
-      // Ліва ялинка
-      ctx.beginPath();
-      ctx.moveTo(150, 800); ctx.lineTo(100, 600); ctx.lineTo(200, 600); ctx.closePath();
-      ctx.fill();
-      ctx.beginPath();
-      ctx.moveTo(150, 700); ctx.lineTo(80, 500); ctx.lineTo(220, 500); ctx.closePath();
-      ctx.fill();
-      
-      // Права ялинка
-      ctx.beginPath();
-      ctx.moveTo(874, 800); ctx.lineTo(824, 600); ctx.lineTo(924, 600); ctx.closePath();
-      ctx.fill();
-      ctx.beginPath();
-      ctx.moveTo(874, 700); ctx.lineTo(804, 500); ctx.lineTo(944, 500); ctx.closePath();
-      ctx.fill();
-      
-      // Різдвяні кульки
-      ctx.fillStyle = '#d32f2f'; ctx.beginPath(); ctx.arc(180, 550, 15, 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = '#1976d2'; ctx.beginPath(); ctx.arc(120, 650, 12, 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = '#ffd700'; ctx.beginPath(); ctx.arc(850, 580, 14, 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = '#7b1fa2'; ctx.beginPath(); ctx.arc(900, 650, 13, 0, Math.PI * 2); ctx.fill();
-    }
-
-    function addChristmasDecorations() {
-      // Парящі сніжинки в 3D
-      for (let i = 0; i < 8; i++) {
-        const snowGeometry = new THREE.SphereGeometry(0.03, 6, 6);
-        const snowMaterial = new THREE.MeshBasicMaterial({ 
-          color: 0xffffff,
-          transparent: true,
-          opacity: 0.8
-        });
-        
-        const snowflake = new THREE.Mesh(snowGeometry, snowMaterial);
-        snowflake.position.set(
-          (Math.random() - 0.5) * 4,
-          (Math.random() - 0.5) * 3 + 1,
-          -0.5 + Math.random() * 0.5
-        );
-        
-        scene.add(snowflake);
-      }
-    }
-
-    // === Анімація ===
-    function animate() {
+    // animate
+    function animate(){
       requestAnimationFrame(animate);
-      
-      // Анімація сліду пальця
-      if (fingerTrail.length > 0) {
-        fingerTrail.forEach((point, index) => {
-          point.material.opacity = 1 - (index / fingerTrail.length);
-          point.scale.multiplyScalar(0.92);
-        });
-        
-        while (fingerTrail.length > 0 && fingerTrail[0].material.opacity < 0.1) {
-          scene.remove(fingerTrail.shift());
+
+      // finger trail decay
+      if (fingerTrail.length){
+        for (let i=0;i<fingerTrail.length;i++){
+          const m = fingerTrail[i].material;
+          m.opacity = Math.max(0, m.opacity - 0.01 - i*0.0005);
+          fingerTrail[i].scale.multiplyScalar(0.985);
+        }
+        // cleanup
+        while (fingerTrail.length && fingerTrail[0].material.opacity < 0.02){
+          const obj = fingerTrail.shift();
+          scene.remove(obj);
         }
       }
-      
-      // Легке хиттання листа
-      if (letter) {
-        letter.rotation.y = Math.sin(Date.now() * 0.001) * 0.02;
-        letter.rotation.x = -0.1 + Math.sin(Date.now() * 0.0007) * 0.01;
+
+      // gentle letter sway
+      if (letterMesh){
+        letterMesh.rotation.y = Math.sin(Date.now()*0.0008)*0.02;
       }
-      
-      renderer.render(scene, camera);
+
+      renderer.render(scene, camera3);
     }
 
-    // === MediaPipe Hands ===
-    function onResults(results) {
-      const t = translations[currentLang];
-      
-      if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
-        const landmarks = results.multiHandLandmarks[0];
-        
-        const tip = landmarks[8]; // INDEX_FINGER_TIP
-        const pip = landmarks[6]; // INDEX_FINGER_PIP
-        const mcp = landmarks[5]; // INDEX_FINGER_MCP
-
-        // Перевірка чи палець витягнутий
-        const tipToPipDist = Math.sqrt(
-          Math.pow(tip.x - pip.x, 2) + 
-          Math.pow(tip.y - pip.y, 2)
-        );
-        
-        const mcpToPipDist = Math.sqrt(
-          Math.pow(mcp.x - pip.x, 2) + 
-          Math.pow(mcp.y - pip.y, 2)
-        );
-
-        const isFingerExtended = tipToPipDist > mcpToPipDist * 0.6;
-
-        // Перетворення координат
-        const ndcX = (tip.x - 0.5) * 3.5;
-        const ndcY = -(tip.y - 0.5) * 2.8;
-        const vector = new THREE.Vector3(ndcX, ndcY, -0.3);
-
-        if (isFingerExtended) {
-          if (!isDrawing) {
-            isDrawing = true;
-            currentPath = [];
-            status.textContent = t.status.drawing;
-            status.classList.add('pulse');
-          }
-          
-          currentPath.push(vector.clone());
-          addFingerTrail(vector.clone());
-          
-        } else {
-          if (isDrawing) {
-            isDrawing = false;
-            addTextToLetter(currentPath);
-            currentPath = [];
-            status.textContent = t.status.done;
-            status.classList.remove('pulse');
-            status.classList.add('success');
-            setTimeout(() => status.classList.remove('success'), 2000);
-          }
-        }
-      } else {
-        if (isDrawing) {
-          isDrawing = false;
-          addTextToLetter(currentPath);
-          currentPath = [];
-          status.classList.remove('pulse');
-        }
-        status.textContent = t.status.initial;
-      }
+    // --- Finger trail & strokes ---
+    function addFingerDot(pos){
+      const geom = new THREE.SphereGeometry(0.035,12,12);
+      const mat = new THREE.MeshStandardMaterial({ color:0xffd54f, emissive:0xffc107, emissiveIntensity:0.6, transparent:true, opacity:0.95 });
+      const s = new THREE.Mesh(geom, mat);
+      s.position.copy(pos);
+      scene.add(s);
+      fingerTrail.push(s);
     }
 
-    // === Додаємо слід пальця ===
-    function addFingerTrail(position) {
-      const geometry = new THREE.SphereGeometry(0.04, 8, 8);
-      const material = new THREE.MeshBasicMaterial({ 
-        color: 0xffd700,
-        transparent: true,
-        opacity: 0.9
-      });
-      
-      const sphere = new THREE.Mesh(geometry, material);
-      sphere.position.copy(position);
-      scene.add(sphere);
-      
-      fingerTrail.push(sphere);
-    }
-
-    // === Додаємо текст на лист ===
-    function addTextToLetter(path) {
-      if (path.length < 3) return;
-
+    function addStrokeFromPath(path){
+      if (!path || path.length < 3) return;
       const curve = new THREE.CatmullRomCurve3(path);
-      
-      const geometry = new THREE.TubeGeometry(curve, path.length * 2, 0.035, 8, false);
-      const material = new THREE.MeshBasicMaterial({ 
-        color: 0xc62828 // Різдвяний червоний
-      });
-      
-      const tube = new THREE.Mesh(geometry, material);
-      textGroup.add(tube);
+      const tubular = Math.max(4, Math.min(0.06, 0.04));
+      const geo = new THREE.TubeGeometry(curve, Math.max(8, path.length*2), 0.035, 8, false);
+      const mat = new THREE.MeshStandardMaterial({ color:0xc62828, roughness:0.4, metalness:0.2 });
+      const mesh = new THREE.Mesh(geo, mat);
+      textGroup.add(mesh);
 
-      // Додаємо золотий блиск
-      const glowGeometry = new THREE.TubeGeometry(curve, path.length * 2, 0.045, 8, false);
-      const glowMaterial = new THREE.MeshBasicMaterial({ 
-        color: 0xffd700,
-        transparent: true,
-        opacity: 0.3
-      });
-      
-      const glow = new THREE.Mesh(glowGeometry, glowMaterial);
+      // glow ring — simple pseudo-bloom
+      const geoG = new THREE.TubeGeometry(curve, Math.max(8, path.length*2), 0.055, 8, false);
+      const matG = new THREE.MeshBasicMaterial({ color:0xffd700, transparent:true, opacity:0.25 });
+      const glow = new THREE.Mesh(geoG, matG);
       textGroup.add(glow);
     }
 
-    // === Перемикання камери ===
-    async function switchCamera() {
+    // --- MediaPipe Hands callback ---
+    function onResults(results){
       const t = translations[currentLang];
-      if (cameraStream) {
-        cameraStream.getTracks().forEach(track => track.stop());
-      }
-      
-      currentCamera = currentCamera === 'environment' ? 'user' : 'environment';
-      status.textContent = `🔄 Switching to ${currentCamera === 'environment' ? (currentLang === 'en' ? 'back' : 'задню') : (currentLang === 'en' ? 'front' : 'передню')} camera...`;
-      
-      try {
-        await startCamera();
-        updateCameraButtonText();
-        status.textContent = t.status.initial;
-      } catch (error) {
-        console.error('Camera switch error:', error);
-        status.textContent = `❌ ${currentLang === 'en' ? 'Camera not available' : 'Камера недоступна'}. Using previous.`;
-        // Fallback to previous camera
-        currentCamera = currentCamera === 'environment' ? 'user' : 'environment';
-        await startCamera();
-        updateCameraButtonText();
+      if (results.multiHandLandmarks && results.multiHandLandmarks.length){
+        const lm = results.multiHandLandmarks[0];
+        const tip = lm[8], pip = lm[6], mcp = lm[5];
+
+        const tipToPip = Math.hypot(tip.x - pip.x, tip.y - pip.y);
+        const mcpToPip = Math.hypot(mcp.x - pip.x, mcp.y - pip.y);
+        const isExtended = tipToPip > mcpToPip * 0.6;
+
+        // map normalized coordinates to 3D plane coordinates (NDC-ish)
+        const ndcX = (tip.x - 0.5) * 3.2;
+        const ndcY = -(tip.y - 0.5) * 2.4;
+        const vec = new THREE.Vector3(ndcX, ndcY, -0.3);
+
+        if (isExtended){
+          if (!isDrawing){
+            // start drawing
+            isDrawing = true;
+            currentPath = [];
+            statusEl.textContent = t.status.drawing;
+            statusEl.style.color = '#d84315';
+            playTone(880,0.06);
+          }
+          currentPath.push(vec.clone());
+          addFingerDot(vec.clone());
+        } else {
+          if (isDrawing){
+            isDrawing = false;
+            // complete stroke
+            addStrokeFromPath(currentPath);
+            currentPath = [];
+            statusEl.textContent = t.status.done;
+            statusEl.style.color = '#2e7d32';
+            playTone(520,0.08);
+            setTimeout(()=>{ statusEl.textContent = t.status.initial; statusEl.style.color = '#b71c1c'; }, 1800);
+          } else {
+            // idle
+            statusEl.textContent = t.status.initial;
+            statusEl.style.color = '#b71c1c';
+          }
+        }
+      } else {
+        if (isDrawing){
+          isDrawing = false;
+          addStrokeFromPath(currentPath);
+          currentPath = [];
+        }
+        statusEl.textContent = translations[currentLang].status.initial;
+        statusEl.style.color = '#b71c1c';
       }
     }
 
-    // === Запуск камери з адаптацією ===
-    async function startCamera() {
+    // --- Camera management (enumerateDevices + cycle) ---
+    async function ensureDevicePermissions() {
+      // On some browsers device labels are empty until permission is granted,
+      // so request minimal permission first to get labels.
       try {
-        videoElement = document.getElementById('video');
-        
-        let constraints = {
-          video: {
-            facingMode: { exact: currentCamera }, // Використовуємо exact для точного режиму
-            width: { ideal: 1280 },
-            height: { ideal: 720 }
-          }
+        const s = await navigator.mediaDevices.getUserMedia({video:true,audio:false});
+        s.getTracks().forEach(t => t.stop());
+      } catch(e){ /* ignore; we'll still try to enumerate */ }
+    }
+
+    async function updateDeviceList(){
+      const list = await navigator.mediaDevices.enumerateDevices();
+      devices = list.filter(d => d.kind === 'videoinput');
+      // populate cameraList UI
+      cameraListEl.innerHTML = '';
+      devices.forEach((d,i)=>{
+        const btn = document.createElement('button');
+        btn.textContent = `${i+1}. ${d.label || ('Camera ' + (i+1))}`;
+        btn.onclick = async () => {
+          cameraListEl.style.display = 'none';
+          await startCamera(d.deviceId);
+          currentDeviceIndex = i;
+          cameraBtn.textContent = `${translations[currentLang].buttons.camera} ${i+1}`;
         };
+        cameraListEl.appendChild(btn);
+      });
+      cameraListEl.style.display = devices.length>1 ? 'block' : 'none';
+      // initially hide but keep content for quick selection
+      setTimeout(() => cameraListEl.style.display = 'none', 1200);
+    }
 
-        // Якщо exact не вдається, пробуємо без exact (адаптація)
-        try {
-          cameraStream = await navigator.mediaDevices.getUserMedia(constraints);
-        } catch (exactError) {
-          console.warn(`Exact ${currentCamera} camera failed, trying ideal:`, exactError);
-          constraints.video.facingMode = { ideal: currentCamera };
-          cameraStream = await navigator.mediaDevices.getUserMedia(constraints);
-        }
+    async function startCamera(deviceId = null){
+      try {
+        // stop old
+        if (cameraStream) cameraStream.getTracks().forEach(t => t.stop());
+        const constraints = {
+          video: deviceId ? { deviceId: { exact: deviceId }, width:{ ideal:1280 }, height:{ ideal:720 } }
+                          : { facingMode: 'environment', width:{ ideal:1280 }, height:{ ideal:720 } }
+        };
+        cameraStream = await navigator.mediaDevices.getUserMedia(constraints);
+        const video = document.getElementById('video');
+        video.srcObject = cameraStream;
+        video.play();
 
-        videoElement.srcObject = cameraStream;
-        
-        // Запускаємо MediaPipe
-        if (window.camera) {
-          window.camera.stop();
+        // stop previous MediaPipe camera
+        if (window.cameraProcessor) {
+          try { window.cameraProcessor.stop(); } catch(e){}
         }
-        
-        window.camera = new Camera(videoElement, {
-          onFrame: async () => {
-            await hands.send({image: videoElement});
-          },
+        // Use MediaPipe's Camera helper to feed frames
+        window.cameraProcessor = new Camera(video, {
+          onFrame: async () => { await hands.send({image: video}); },
           width: 640,
           height: 480
         });
-        
-        await window.camera.start();
-        
-        console.log('Camera started successfully:', currentCamera);
-        
-      } catch (error) {
-        console.error('Camera error:', error);
-        const t = translations[currentLang];
-        
-        // Адаптація: якщо задня не доступна, перемикаємо на передню
-        if (currentCamera === 'environment') {
-          status.textContent = `${t.status.cameraBack} not available, switching to ${t.status.cameraFront}...`;
-          currentCamera = 'user';
-          updateCameraButtonText();
-          return await startCamera(); // Рекурсивний виклик для fallback
-        } else {
-          status.textContent = `❌ ${t.status.cameraFront} not available. Please check permissions.`;
-          throw error; // Якщо і фронтальна не працює, кидаємо помилку
-        }
+        await window.cameraProcessor.start();
+
+        // update device list labels (some browsers only provide labels after stream)
+        await updateDeviceList();
+
+        // update UI label
+        const idx = devices.findIndex(d => d.deviceId === (deviceId || ''));
+        cameraBtn.textContent = `${translations[currentLang].buttons.camera} ${ (idx>=0 ? idx+1 : currentDeviceIndex+1) }`;
+
+      } catch (err) {
+        console.error('Camera start error:', err);
+        statusEl.textContent = 'Камера недоступна. Перевірте дозволи.';
+        playTone(200,0.1);
       }
     }
 
-    // === Інші функції ===
-    function clearText() {
-      const t = translations[currentLang];
-      while (textGroup.children.length > 0) {
-        textGroup.remove(textGroup.children[0]);
-      }
-      status.textContent = t.status.clear;
-      status.classList.add('success');
-      setTimeout(() => {
-        status.textContent = t.status.initial;
-        status.classList.remove('success');
-      }, 2000);
-    }
-
-    function switchLanguage(lang) {
-      currentLang = lang;
-      const t = translations[currentLang];
-      
-      document.title = t.title;
-      status.textContent = t.status.initial;
-      
-      document.getElementById('instructions').innerHTML = `
-        <h3>${t.instructions.title}</h3>
-        <p>${t.instructions.step1}</p>
-        <p>${t.instructions.step2}</p>
-        <p>${t.instructions.step3}</p>
-      `;
-      
-      clearBtn.textContent = t.buttons.clear;
-      recordBtn.textContent = isRecording ? t.buttons.stop : t.buttons.record;
-      langBtn.textContent = t.buttons.lang;
-      updateCameraButtonText(); // Оновлюємо текст кнопки камери
-      
-      createChristmasLetter();
-    }
-
-    // === Ініціалізація ===
-    async function initializeApp() {
-      try {
-        createSnowflakes();
-        initThree();
-
-        // MediaPipe Hands
-        hands = new Hands({
-          locateFile: (file) => {
-            return `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`;
-          }
-        });
-
-        hands.setOptions({
-          maxNumHands: 1,
-          modelComplexity: 1,
-          minDetectionConfidence: 0.7,
-          minTrackingConfidence: 0.7
-        });
-
-        hands.onResults(onResults);
-
-        // Запускаємо камеру (основна - задня з адаптацією)
+    async function cycleCamera(){
+      if (!devices.length) await updateDeviceList();
+      if (!devices.length){
+        // fallback: simply restart with facingMode user
         await startCamera();
-        updateCameraButtonText(); // Встановлюємо початковий текст кнопки
-
-        // Обробники подій
-        langBtn.onclick = () => switchLanguage(currentLang === 'en' ? 'uk' : 'en');
-        cameraBtn.onclick = switchCamera;
-        clearBtn.onclick = clearText;
-        
-        recordBtn.onclick = () => {
-          if (isRecording) stopRecording();
-          else startRecording();
-        };
-
-        window.addEventListener('resize', () => {
-          camera.aspect = window.innerWidth / window.innerHeight;
-          camera.updateProjectionMatrix();
-          renderer.setSize(window.innerWidth, window.innerHeight);
-        });
-
-      } catch (error) {
-        console.error('Initialization error:', error);
-        status.textContent = 'Error: ' + error.message;
+        return;
       }
+      currentDeviceIndex = (currentDeviceIndex + 1) % devices.length;
+      await startCamera(devices[currentDeviceIndex].deviceId);
+      cameraBtn.textContent = `${translations[currentLang].buttons.camera} ${currentDeviceIndex+1}`;
+      playTone(680,0.07);
     }
 
-    // Функції запису відео
-    function startRecording() {
-      const t = translations[currentLang];
-      recordedChunks = [];
-      
-      try {
-        const stream = canvas.captureStream(25);
-        mediaRecorder = new MediaRecorder(stream, { 
-          mimeType: 'video/webm; codecs=vp9'
-        });
+    // --- Clear text function ---
+    function clearText(){
+      while (textGroup.children.length) {
+        const c = textGroup.children[0];
+        textGroup.remove(c);
+      }
+      statusEl.textContent = translations[currentLang].status.clear;
+      playTone(980,0.06);
+      setTimeout(()=>{ statusEl.textContent = translations[currentLang].status.initial; }, 1400);
+    }
 
-        mediaRecorder.ondataavailable = e => {
-          if (e.data.size > 0) recordedChunks.push(e.data);
-        };
-        
+    // --- Recording ---
+    function startRecording(){
+      try {
+        recordedChunks = [];
+        const stream = document.getElementById('canvas').captureStream(30);
+        mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/webm; codecs=vp9' });
+        mediaRecorder.ondataavailable = e => { if (e.data.size) recordedChunks.push(e.data); };
         mediaRecorder.onstop = () => {
           const blob = new Blob(recordedChunks, { type: 'video/webm' });
           const url = URL.createObjectURL(blob);
@@ -786,31 +476,97 @@
           a.download = `christmas-letter-${Date.now()}.webm`;
           a.click();
           URL.revokeObjectURL(url);
-          
-          status.textContent = t.status.saved;
-          status.classList.add('success');
-          setTimeout(() => status.textContent = t.status.initial, 3000);
+          statusEl.textContent = translations[currentLang].status.saved;
+          playTone(840,0.12);
+          setTimeout(()=> statusEl.textContent = translations[currentLang].status.initial, 1800);
         };
-
         mediaRecorder.start();
         isRecording = true;
-        recordBtn.textContent = t.buttons.stop;
-        recordBtn.classList.add('recording');
-        status.textContent = t.status.recording;
-      } catch (error) {
-        status.textContent = 'Recording not supported';
+        recordBtn.classList.add('recording'); recordBtn.textContent = translations[currentLang].buttons.stop;
+        statusEl.textContent = translations[currentLang].status.recording;
+        playTone(440,0.08);
+      } catch (e) {
+        console.error('Recording error', e);
+        statusEl.textContent = 'Recording not supported';
       }
     }
-
-    function stopRecording() {
-      const t = translations[currentLang];
-      if (mediaRecorder) mediaRecorder.stop();
+    function stopRecording(){
+      if (mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop();
       isRecording = false;
-      recordBtn.textContent = t.buttons.record;
-      recordBtn.classList.remove('recording');
+      recordBtn.classList.remove('recording'); recordBtn.textContent = translations[currentLang].buttons.record;
     }
 
+    // --- Language switch ---
+    function switchLanguage(){
+      currentLang = currentLang === 'uk' ? 'en' : 'uk';
+      const t = translations[currentLang];
+      document.title = t.title;
+      langBtn.textContent = t.buttons.lang;
+      clearBtn.textContent = t.buttons.clear;
+      recordBtn.textContent = isRecording ? t.buttons.stop : t.buttons.record;
+      cameraBtn.textContent = t.buttons.camera;
+      // update instructions
+      document.getElementById('instructions').innerHTML = `<strong>🎄 ${t.title}</strong>
+        <div style="margin-top:8px">1. Show your index finger to the camera — it will start a trail ✨<br>2. Extend to write, bend to finish the stroke</div>`;
+      // recreate letter with new header
+      createChristmasLetter();
+    }
+
+    // --- Init MediaPipe Hands ---
+    async function initHands() {
+      hands = new Hands({
+        locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
+      });
+      hands.setOptions({maxNumHands:1, modelComplexity:1, minDetectionConfidence:0.6, minTrackingConfidence:0.6});
+      hands.onResults(onResults);
+    }
+
+    // --- App initialization ---
+    async function initializeApp(){
+      createSnowUI();
+      initThree();
+      await initHands();
+
+      // ensure we can see labels
+      await ensureDevicePermissions();
+      await updateDeviceList();
+      // start camera with best guess: prefer back/environment if available
+      if (devices.length){
+        // find one with 'back' or 'rear' in label if any
+        let preferred = devices.find(d => /back|rear|environment|задн/i.test(d.label)) || devices[0];
+        currentDeviceIndex = devices.indexOf(preferred);
+        await startCamera(preferred.deviceId);
+      } else {
+        await startCamera(); // try facingMode fallback
+      }
+
+      // UI events
+      langBtn.onclick = () => { switchLanguage(); playTone(720,0.06); };
+      cameraBtn.onclick = async () => { // open small list first if available
+        if (devices.length > 1){
+          // toggle cameraList
+          cameraListEl.style.display = cameraListEl.style.display === 'block' ? 'none' : 'block';
+          playTone(620,0.05);
+        } else {
+          await cycleCamera();
+        }
+      };
+      clearBtn.onclick = () => { clearText(); };
+      recordBtn.onclick = () => { if (isRecording) stopRecording(); else startRecording(); };
+
+      window.addEventListener('resize', () => {
+        camera3.aspect = window.innerWidth / window.innerHeight;
+        camera3.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+      });
+    }
+
+    // Start
     window.addEventListener('load', initializeApp);
+
+    // Small accessibility: resume audio context on first user gesture if suspended (for mobile Safari)
+    document.addEventListener('click', ()=>{ if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume(); }, { once:true });
+
   </script>
 </body>
 </html>
