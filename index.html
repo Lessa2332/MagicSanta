@@ -26,6 +26,8 @@
     
     canvas { 
       display: block; 
+      width: 100%;
+      height: 100%;
     }
     
     #ui {
@@ -116,7 +118,8 @@
     @keyframes pulse {
       0% { opacity: 0.7; }
       50% { opacity: 1; }
-      100% { opacity: 0.7; }
+      100% { opacity: 0.7;
+      }
     }
     
     .success {
@@ -160,11 +163,11 @@
   <!-- Three.js -->
   <script src="https://cdn.jsdelivr.net/npm/three@0.157.0/build/three.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.157.0/examples/js/controls/OrbitControls.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.157.0/examples/js/loaders/SVGLoader.js"></script>
 
   <!-- MediaPipe Hands -->
-  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4/hands.js" crossorigin="anonymous"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils@0.3/camera_utils.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js"></script>
 
   <script>
     // Language support
@@ -228,6 +231,7 @@
     let mediaRecorder;
     let isRecording = false;
     let fingerTrail = [];
+    let videoElement;
 
     // Language switch function
     function switchLanguage(lang) {
@@ -250,24 +254,22 @@
       
       // Update buttons
       clearBtn.textContent = t.buttons.clear;
-      recordBtn.textContent = t.buttons.record;
+      recordBtn.textContent = isRecording ? t.buttons.stop : t.buttons.record;
       langBtn.textContent = t.buttons.lang;
       
-      // Update header in texture (recreate if needed)
+      // Update header in texture
       if (scroll) {
-        createParchment(); // Recreate to update header
+        createParchment();
       }
     }
 
     // === Елементи ===
     const video = document.getElementById('video');
     const canvas = document.getElementById('canvas');
-    const ctx = canvas.getContext('2d');
     const status = document.getElementById('status');
     const recordBtn = document.getElementById('recordBtn');
     const clearBtn = document.getElementById('clearBtn');
     const langBtn = document.getElementById('langBtn');
-    const instructions = document.getElementById('instructions');
 
     // === Three.js ініціалізація ===
     function initThree() {
@@ -278,15 +280,13 @@
       camera.position.set(0, 0, 3);
 
       renderer = new THREE.WebGLRenderer({ 
-        canvas, 
+        canvas: canvas, 
         alpha: true, 
         antialias: true,
-        preserveDrawingBuffer: true // Для запису відео
+        preserveDrawingBuffer: true
       });
       renderer.setSize(window.innerWidth, window.innerHeight);
       renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-      renderer.shadowMap.enabled = true;
-      renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
       // Освітлення
       const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
@@ -294,7 +294,6 @@
       
       const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
       directionalLight.position.set(5, 10, 7);
-      directionalLight.castShadow = true;
       scene.add(directionalLight);
 
       // Створення пергаменту
@@ -313,7 +312,6 @@
       // Remove old scroll if exists
       if (scroll) scene.remove(scroll);
       
-      // Основа пергаменту
       const parchmentGeometry = new THREE.PlaneGeometry(2.5, 3.5);
       const parchmentTexture = createParchmentTexture();
       
@@ -326,13 +324,9 @@
       const parchment = new THREE.Mesh(parchmentGeometry, parchmentMaterial);
       parchment.position.set(0, 0, -1);
       parchment.rotation.x = -0.1;
-      parchment.receiveShadow = true;
       scene.add(parchment);
       
       scroll = parchment;
-
-      // Декоративні елементи
-      addParchmentDetails();
     }
 
     // === Текстура пергаменту ===
@@ -378,33 +372,7 @@
       ctx.stroke();
 
       const texture = new THREE.CanvasTexture(canvas);
-      texture.wrapS = THREE.RepeatWrapping;
-      texture.wrapT = THREE.RepeatWrapping;
-      
       return texture;
-    }
-
-    // === Деталі пергаменту ===
-    function addParchmentDetails() {
-      // Кути пергаменту
-      const cornerGeometry = new THREE.PlaneGeometry(0.3, 0.3);
-      const cornerMaterial = new THREE.MeshLambertMaterial({ 
-        color: 0x8b4513,
-        transparent: true,
-        opacity: 0.8
-      });
-      
-      const positions = [
-        [-1.1, 1.55, -0.9], [1.1, 1.55, -0.9],
-        [-1.1, -1.55, -0.9], [1.1, -1.55, -0.9]
-      ];
-      
-      positions.forEach(pos => {
-        const corner = new THREE.Mesh(cornerGeometry, cornerMaterial);
-        corner.position.set(...pos);
-        corner.rotation.x = -0.1;
-        scene.add(corner);
-      });
     }
 
     // === Анімація ===
@@ -430,75 +398,49 @@
     // === MediaPipe Hands ===
     function onResults(results) {
       const t = translations[currentLang];
-      ctx.save();
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.drawImage(results.image, 0, 0, canvas.width, canvas.height);
+      
+      if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
+        const landmarks = results.multiHandLandmarks[0];
+        
+        // Вказівний палець — кінчик
+        const tip = landmarks[8]; // INDEX_FINGER_TIP
+        const mcp = landmarks[5]; // INDEX_FINGER_MCP
 
-      if (results.multiHandLandmarks && results.multiHandedness) {
-        for (let i = 0; i < results.multiHandLandmarks.length; i++) {
-          const landmarks = results.multiHandLandmarks[i];
-          const handedness = results.multiHandedness[i];
+        // Перетворення в 3D
+        const ndcX = (tip.x * 2 - 1);
+        const ndcY = -(tip.y * 2 - 1);
+        const vector = new THREE.Vector3(ndcX * 2, ndcY * 1.5, -0.5);
 
-          // Вказівний палець — кінчик
-          const tip = landmarks[8]; // INDEX_FINGER_TIP
-          const mcp = landmarks[5]; // INDEX_FINGER_MCP
+        // Відстань між кінчиком і основою
+        const dist = Math.sqrt(
+          Math.pow(tip.x - mcp.x, 2) + 
+          Math.pow(tip.y - mcp.y, 2)
+        );
 
-          const x = tip.x * canvas.width;
-          const y = tip.y * canvas.height;
-          const baseX = mcp.x * canvas.width;
-          const baseY = mcp.y * canvas.height;
-
-          // Перетворення в 3D
-          const ndcX = (x / canvas.width) * 2 - 1;
-          const ndcY = -(y / canvas.height) * 2 + 1;
-          const vector = new THREE.Vector3(ndcX, ndcY, 0.2);
-          vector.unproject(camera);
-
-          // Відстань між кінчиком і основою
-          const dist = Math.hypot(x - baseX, y - baseY);
-
-          // Якщо палець "витягнутий" — малюємо
-          if (dist > 50) {
-            if (!isDrawing) {
-              isDrawing = true;
-              currentPath = [];
-              status.textContent = t.status.drawing;
-              status.classList.add('pulse');
-            }
-            
-            currentPath.push(vector.clone());
-            
-            // Додаємо слід пальця
-            addFingerTrail(vector.clone());
-            
-          } else {
-            if (isDrawing) {
-              isDrawing = false;
-              addTextToScroll(currentPath);
-              currentPath = [];
-              status.textContent = t.status.done;
-              status.classList.remove('pulse');
-              status.classList.add('success');
-              setTimeout(() => status.classList.remove('success'), 2000);
-            }
+        // Якщо палець "витягнутий" — малюємо
+        if (dist > 0.1) {
+          if (!isDrawing) {
+            isDrawing = true;
+            currentPath = [];
+            status.textContent = t.status.drawing;
+            status.classList.add('pulse');
           }
-
-          // Візуалізація пальця
-          ctx.beginPath();
-          ctx.arc(x, y, 15, 0, Math.PI * 2);
-          ctx.fillStyle = isDrawing ? '#F9D423' : '#e65c00';
-          ctx.fill();
-          ctx.strokeStyle = '#5d2a00';
-          ctx.lineWidth = 3;
-          ctx.stroke();
           
-          // Лінія до основи пальця
-          ctx.beginPath();
-          ctx.moveTo(x, y);
-          ctx.lineTo(baseX, baseY);
-          ctx.strokeStyle = isDrawing ? '#F9D423' : '#e65c00';
-          ctx.lineWidth = 2;
-          ctx.stroke();
+          currentPath.push(vector.clone());
+          
+          // Додаємо слід пальця
+          addFingerTrail(vector.clone());
+          
+        } else {
+          if (isDrawing) {
+            isDrawing = false;
+            addTextToScroll(currentPath);
+            currentPath = [];
+            status.textContent = t.status.done;
+            status.classList.remove('pulse');
+            status.classList.add('success');
+            setTimeout(() => status.classList.remove('success'), 2000);
+          }
         }
       } else {
         if (isDrawing) {
@@ -509,8 +451,6 @@
         }
         status.textContent = t.status.initial;
       }
-
-      ctx.restore();
     }
 
     // === Додаємо слід пальця ===
@@ -531,31 +471,16 @@
 
     // === Додаємо текст на пергамент ===
     function addTextToScroll(path) {
-      if (path.length < 10) return;
+      if (path.length < 5) return;
 
-      const curve = new THREE.CatmullRomCurve3(path);
-      const points = curve.getPoints(100);
-
-      const geometry = new THREE.BufferGeometry().setFromPoints(points);
+      const geometry = new THREE.BufferGeometry().setFromPoints(path);
       const material = new THREE.LineBasicMaterial({ 
-        color: 0x5d2a00, 
-        linewidth: 2 
+        color: 0x5d2a00,
+        linewidth: 3
       });
       
       const line = new THREE.Line(geometry, material);
       textGroup.add(line);
-      
-      // Додаємо тінь
-      const shadowGeometry = new THREE.BufferGeometry().setFromPoints(points);
-      const shadowMaterial = new THREE.LineBasicMaterial({ 
-        color: 0x000000, 
-        transparent: true,
-        opacity: 0.3 
-      });
-      
-      const shadow = new THREE.Line(shadowGeometry, shadowMaterial);
-      shadow.position.z = -0.01;
-      textGroup.add(shadow);
     }
 
     // === Очищення тексту ===
@@ -576,39 +501,47 @@
     function startRecording() {
       const t = translations[currentLang];
       recordedChunks = [];
-      const stream = canvas.captureStream(30);
-      mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/webm; codecs=vp9' });
-
-      mediaRecorder.ondataavailable = e => {
-        if (e.data.size > 0) {
-          recordedChunks.push(e.data);
-        }
-      };
       
-      mediaRecorder.onstop = () => {
-        const blob = new Blob(recordedChunks, { type: 'video/webm' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `thankyou_${new Date().toISOString().replace(/[:.]/g, '-')}.webm`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-        
-        status.textContent = t.status.saved;
-        status.classList.add('success');
-        setTimeout(() => {
-          status.textContent = t.status.initial;
-          status.classList.remove('success');
-        }, 3000);
-      };
+      try {
+        const stream = canvas.captureStream(25);
+        mediaRecorder = new MediaRecorder(stream, { 
+          mimeType: 'video/webm; codecs=vp9'
+        });
 
-      mediaRecorder.start(1000); // Збирає дані кожну секунду
-      isRecording = true;
-      recordBtn.textContent = t.buttons.stop;
-      recordBtn.classList.add('recording');
-      status.textContent = t.status.recording;
+        mediaRecorder.ondataavailable = e => {
+          if (e.data.size > 0) {
+            recordedChunks.push(e.data);
+          }
+        };
+        
+        mediaRecorder.onstop = () => {
+          const blob = new Blob(recordedChunks, { type: 'video/webm' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `thankyou-letter-${new Date().getTime()}.webm`;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+          
+          status.textContent = t.status.saved;
+          status.classList.add('success');
+          setTimeout(() => {
+            status.textContent = t.status.initial;
+            status.classList.remove('success');
+          }, 3000);
+        };
+
+        mediaRecorder.start();
+        isRecording = true;
+        recordBtn.textContent = t.buttons.stop;
+        recordBtn.classList.add('recording');
+        status.textContent = t.status.recording;
+      } catch (error) {
+        console.error('Recording error:', error);
+        status.textContent = 'Recording not supported';
+      }
     }
 
     function stopRecording() {
@@ -622,69 +555,72 @@
     }
 
     // === Ініціалізація ===
-    window.onload = () => {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
+    async function initializeApp() {
+      try {
+        // Ініціалізація Three.js
+        initThree();
 
-      initThree();
+        // Ініціалізація MediaPipe Hands
+        hands = new Hands({
+          locateFile: (file) => {
+            return `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`;
+          }
+        });
 
-      // Налаштування MediaPipe Hands
-      hands = new Hands({
-        locateFile: (file) => {
-          return `https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4/${file}`;
-        }
-      });
-      
-      hands.setOptions({
-        maxNumHands: 1,
-        modelComplexity: 1,
-        minDetectionConfidence: 0.7,
-        minTrackingConfidence: 0.7
-      });
-      
-      hands.onResults(onResults);
+        hands.setOptions({
+          maxNumHands: 1,
+          modelComplexity: 1,
+          minDetectionConfidence: 0.5,
+          minTrackingConfidence: 0.5
+        });
 
-      // Запуск камери
-      const cameraFeed = new Camera(video, {
-        onFrame: async () => {
-          await hands.send({ image: video });
-        },
-        width: 640,
-        height: 480
-      });
-      
-      cameraFeed.start();
+        hands.onResults(onResults);
 
-      // Обробники подій
-      langBtn.onclick = () => {
-        switchLanguage(currentLang === 'en' ? 'uk' : 'en');
-      };
-      
-      recordBtn.onclick = () => {
-        if (isRecording) {
-          stopRecording();
-        } else {
-          startRecording();
-        }
-      };
-      
-      clearBtn.onclick = clearText;
+        // Запуск камери
+        videoElement = document.getElementById('video');
+        
+        const camera = new Camera(videoElement, {
+          onFrame: async () => {
+            await hands.send({image: videoElement});
+          },
+          width: 640,
+          height: 480
+        });
+        
+        await camera.start();
 
-      // Обробник зміни розміру вікна
-      window.addEventListener('resize', () => {
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-        camera.aspect = window.innerWidth / window.innerHeight;
-        camera.updateProjectionMatrix();
-        renderer.setSize(window.innerWidth, window.innerHeight);
-      });
+        // Обробники подій
+        langBtn.onclick = () => {
+          switchLanguage(currentLang === 'en' ? 'uk' : 'en');
+        };
+        
+        recordBtn.onclick = () => {
+          if (isRecording) {
+            stopRecording();
+          } else {
+            startRecording();
+          }
+        };
+        
+        clearBtn.onclick = clearText;
 
-      // Автоматично приховати інструкції через 10 секунд
-      setTimeout(() => {
-        instructions.style.opacity = '0.7';
-        instructions.style.transition = 'opacity 1s';
-      }, 10000);
-    };
+        // Обробник зміни розміру вікна
+        window.addEventListener('resize', () => {
+          camera.aspect = window.innerWidth / window.innerHeight;
+          camera.updateProjectionMatrix();
+          renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        console.log('App initialized successfully');
+
+      } catch (error) {
+        console.error('Initialization error:', error);
+        status.textContent = 'Error: ' + error.message;
+      }
+    }
+
+    // Запуск додатку
+    window.addEventListener('load', initializeApp);
   </script>
 </body>
 </html>
