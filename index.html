@@ -7,6 +7,8 @@
     <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.3/dist/mindar-image.prod.js"></script>
     <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.3/dist/mindar-image-aframe.prod.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
     <style>
         * {
             margin: 0;
@@ -34,6 +36,17 @@
             width: 100%;
             height: 100%;
             z-index: 1;
+        }
+        
+        #video-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: 0;
+            opacity: 0;
         }
         
         #ui {
@@ -98,11 +111,11 @@
             left: 50%;
             transform: translate(-50%, -50%);
             text-align: center;
-            background: rgba(0, 0, 0, 0.8);
+            background: rgba(0, 0, 0, 0.9);
             padding: 30px;
             border-radius: 15px;
             z-index: 200;
-            display: none;
+            border: 3px solid #F4E4BC;
         }
         
         #marker-image {
@@ -154,6 +167,18 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+        
+        .finger-indicator {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            background: rgba(255, 0, 0, 0.7);
+            border-radius: 50%;
+            border: 3px solid white;
+            z-index: 50;
+            pointer-events: none;
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -166,10 +191,16 @@
         <div id="marker-info">
             <h3>🎯 Налаштування маркера</h3>
             <p>Роздрукуйте цей маркер або відкрийте на іншому пристрої:</p>
-            <img id="marker-image" src="" alt="AR Marker">
+            <img id="marker-image" src="https://cdn.jsdelivr.net/gh/hiukim/mind-ar-js@1.2.3/examples/image-tracking/assets/band-example/band-target.png" alt="AR Marker">
             <p>Наведіть камеру на маркер, щоб почати</p>
             <button class="control-btn" onclick="hideMarkerInfo()">Понятно</button>
         </div>
+
+        <!-- Відео для MediaPipe -->
+        <video id="video-overlay" playsinline></video>
+        
+        <!-- Індикатор пальця -->
+        <div class="finger-indicator" id="fingerIndicator"></div>
 
         <div class="ar-overlay">
             <a-scene 
@@ -198,7 +229,7 @@
                 <a-entity mindar-image-target="targetIndex: 0">
                     <!-- Основа пергаменту -->
                     <a-plane 
-                        class="parchment"
+                        class="parchment drawable"
                         src="#parchment-texture"
                         position="0 0 0"
                         width="1.2"
@@ -208,9 +239,9 @@
                     
                     <!-- Область для малювання -->
                     <a-entity 
+                        id="drawing-surface"
                         class="drawing-surface"
                         position="0 0 0.01"
-                        drawing-handler
                     >
                         <!-- Тут будуть з'являтися намальовані лінії -->
                     </a-entity>
@@ -244,32 +275,38 @@
         let sceneEl;
         let drawingSurface;
         let isMarkerVisible = false;
+        let hands;
+        let camera;
+        let videoElement;
 
         // === ІНІЦІАЛІЗАЦІЯ ===
         document.addEventListener('DOMContentLoaded', function() {
             sceneEl = document.querySelector('a-scene');
-            drawingSurface = document.querySelector('.drawing-surface');
+            drawingSurface = document.querySelector('#drawing-surface');
+            videoElement = document.querySelector('#video-overlay');
             
             // Очікуємо завантаження сцени
             sceneEl.addEventListener('loaded', function() {
                 initAR();
+                setupHandTracking();
                 setupEventListeners();
                 showMarkerInfo();
             });
             
             // Слухаємо події MindAR
-            sceneEl.addEventListener('mindar-target-found', function() {
-                console.log('🎯 Маркер знайдено!');
+            sceneEl.addEventListener('mindar-target-found', function(event) {
+                console.log('🎯 Маркер знайдено!', event.detail);
                 isMarkerVisible = true;
                 document.getElementById('status').textContent = '✅ Маркер знайдено! Покажіть палець ✋';
                 document.getElementById('status').classList.add('success');
             });
             
-            sceneEl.addEventListener('mindar-target-lost', function() {
-                console.log('❌ Маркер втрачено');
+            sceneEl.addEventListener('mindar-target-lost', function(event) {
+                console.log('❌ Маркер втрачено', event.detail);
                 isMarkerVisible = false;
                 document.getElementById('status').textContent = '🔍 Шукаємо маркер...';
                 document.getElementById('status').classList.remove('success');
+                stopDrawing();
             });
         });
 
@@ -277,21 +314,218 @@
         function initAR() {
             // Запускаємо MindAR
             const arSystem = sceneEl.systems["mindar-image-system"];
-            arSystem.start(); // Запускаємо відстеження
+            arSystem.start();
+            
+            console.log('🚀 MindAR запущено');
             
             // Приховуємо екран завантаження
             setTimeout(() => {
                 document.getElementById('loading').style.display = 'none';
             }, 2000);
-            
-            // Налаштовуємо камеру на задню
-            setupBackCamera();
         }
 
-        // === НАЛАШТУВАННЯ ЗАДНЬОЇ КАМЕРИ ===
-        function setupBackCamera() {
-            // MindAR автоматично використовує задню камеру за замовчуванням
-            console.log('📷 Використовується задня камера');
+        // === MEDIAPIPE HANDS - ВІДСТЕЖЕННЯ ПАЛЬЦЯ ===
+        function setupHandTracking() {
+            console.log('🖐️ Ініціалізація MediaPipe Hands...');
+            
+            hands = new Hands({
+                locateFile: (file) => {
+                    return `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`;
+                }
+            });
+
+            hands.setOptions({
+                maxNumHands: 1,
+                modelComplexity: 1,
+                minDetectionConfidence: 0.7,
+                minTrackingConfidence: 0.5
+            });
+
+            hands.onResults(onHandResults);
+
+            // Запуск камери для MediaPipe
+            camera = new Camera(videoElement, {
+                onFrame: async () => {
+                    if (hands) {
+                        await hands.send({image: videoElement});
+                    }
+                },
+                width: 640,
+                height: 480
+            });
+            
+            camera.start().then(() => {
+                console.log('📷 Камера запущена для MediaPipe');
+            }).catch(error => {
+                console.error('❌ Помилка камери:', error);
+            });
+        }
+
+        // === ОБРОБКА РЕЗУЛЬТАТІВ ВІДСТЕЖЕННЯ РУК ===
+        function onHandResults(results) {
+            if (!isMarkerVisible) return;
+
+            const fingerIndicator = document.getElementById('fingerIndicator');
+            
+            if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
+                const landmarks = results.multiHandLandmarks[0];
+                
+                // Вказівний палець (кінчик)
+                const indexFingerTip = landmarks[8];
+                
+                // Відображення індикатора пальця
+                const x = indexFingerTip.x * window.innerWidth;
+                const y = indexFingerTip.y * window.innerHeight;
+                fingerIndicator.style.left = (x - 15) + 'px';
+                fingerIndicator.style.top = (y - 15) + 'px';
+                fingerIndicator.style.display = 'block';
+                
+                // Визначення стану пальця (витягнутий/зігнутий)
+                const isFingerExtended = checkFingerExtended(landmarks);
+                
+                // Конвертація координат у 3D-простір AR
+                const fingerPosition = convertToARPosition(indexFingerTip);
+                
+                if (isFingerExtended) {
+                    if (!isDrawing) {
+                        startDrawing(fingerPosition);
+                    } else {
+                        addPointToDrawing(fingerPosition);
+                    }
+                } else {
+                    if (isDrawing) {
+                        stopDrawing();
+                    }
+                }
+            } else {
+                fingerIndicator.style.display = 'none';
+                if (isDrawing) {
+                    stopDrawing();
+                }
+            }
+        }
+
+        // === ПЕРЕВІРКА ЧИ ПАЛЕЦЬ ВИТЯГНУТИЙ ===
+        function checkFingerExtended(landmarks) {
+            // Вказівний палець
+            const tip = landmarks[8];  // Кінчик
+            const dip = landmarks[7];  // Другий суглоб
+            const pip = landmarks[6];  // Середній суглоб
+            const mcp = landmarks[5];  // Основа
+            
+            // Обчислюємо відстані між суглобами
+            const tipToDip = calculateDistance(tip, dip);
+            const dipToPip = calculateDistance(dip, pip);
+            const pipToMcp = calculateDistance(pip, mcp);
+            
+            // Палець вважається витягнутим, якщо відстань tip-mcp велика
+            const tipToMcp = calculateDistance(tip, mcp);
+            const referenceDistance = calculateDistance(landmarks[0], landmarks[5]); // Зап'ястя до основи
+            
+            // Відношення для визначення витягнутого стану
+            const extensionRatio = tipToMcp / referenceDistance;
+            
+            return extensionRatio > 0.3; // Емпіричне значення
+        }
+
+        function calculateDistance(point1, point2) {
+            return Math.sqrt(
+                Math.pow(point1.x - point2.x, 2) + 
+                Math.pow(point1.y - point2.y, 2) +
+                Math.pow(point1.z - point2.z, 2)
+            );
+        }
+
+        // === КОНВЕРТАЦІЯ КООРДИНАТ У 3D-ПРОСТІР AR ===
+        function convertToARPosition(landmark) {
+            // Масштабування координат для AR-сцени
+            // Це спрощена конвертація - у реальному додатку потрібно враховувати
+            // позицію маркера та перспективу камери
+            
+            const scale = 2.5; // Масштабний коефіцієнт
+            const offsetX = 0; // Зсув по X
+            const offsetY = 0.5; // Зсув по Y (підняти вище)
+            
+            const x = (landmark.x - 0.5) * scale + offsetX;
+            const y = -(landmark.y - 0.5) * scale + offsetY; // Інвертуємо Y
+            const z = -landmark.z * 0.5; // Глибина
+            
+            return {x: x, y: y, z: z};
+        }
+
+        // === ФУНКЦІЇ МАЛЮВАННЯ ===
+        function startDrawing(position) {
+            if (!isMarkerVisible) return;
+            
+            isDrawing = true;
+            currentPoints = [position];
+            
+            console.log('✍️ Початок малювання:', position);
+            
+            // Створюємо нову лінію
+            currentLine = document.createElement('a-entity');
+            currentLine.setAttribute('line', {
+                points: formatPoints(currentPoints),
+                color: '#5D2A00',
+                linewidth: 10
+            });
+            
+            drawingSurface.appendChild(currentLine);
+            document.getElementById('status').textContent = '✍️ Пишемо...';
+            document.getElementById('status').classList.add('pulse');
+        }
+
+        function addPointToDrawing(position) {
+            if (!isDrawing || !currentLine || !isMarkerVisible) return;
+            
+            // Додаємо нову точку, якщо вона достатньо далеко від попередньої
+            if (currentPoints.length > 0) {
+                const lastPoint = currentPoints[currentPoints.length - 1];
+                const distance = Math.sqrt(
+                    Math.pow(position.x - lastPoint.x, 2) +
+                    Math.pow(position.y - lastPoint.y, 2) +
+                    Math.pow(position.z - lastPoint.z, 2)
+                );
+                
+                if (distance < 0.02) return; // Занадто близько - пропускаємо
+            }
+            
+            currentPoints.push(position);
+            
+            // Обмежуємо кількість точок для продуктивності
+            if (currentPoints.length > 100) {
+                currentPoints.shift();
+            }
+            
+            // Оновлюємо лінію
+            currentLine.setAttribute('line', {
+                points: formatPoints(currentPoints),
+                color: '#5D2A00',
+                linewidth: 10
+            });
+        }
+
+        function stopDrawing() {
+            if (!isDrawing) return;
+            
+            isDrawing = false;
+            currentLine = null;
+            currentPoints = [];
+            
+            console.log('⏹️ Зупинка малювання');
+            
+            document.getElementById('status').textContent = '✅ Напис додано! Пишіть ще';
+            document.getElementById('status').classList.remove('pulse');
+            
+            setTimeout(() => {
+                if (isMarkerVisible) {
+                    document.getElementById('status').textContent = '✅ Маркер знайдено! Покажіть палець ✋';
+                }
+            }, 2000);
+        }
+
+        function formatPoints(points) {
+            return points.map(p => `${p.x} ${p.y} ${p.z}`).join(', ');
         }
 
         // === ОБРОБНИКИ ПОДІЙ ===
@@ -304,82 +538,6 @@
             
             // Кнопка маркера
             document.getElementById('markerBtn').addEventListener('click', showMarkerInfo);
-            
-            // Відстеження руху пальця
-            setupFingerTracking();
-        }
-
-        // === ВІДСТЕЖЕННЯ ПАЛЬЦЯ ===
-        function setupFingerTracking() {
-            // Тут буде інтеграція з MediaPipe Hands для відстеження пальця
-            // Поки що використовуємо просту емуляцію для демонстрації
-            
-            // Додаємо обробник кліків для демонстрації
-            sceneEl.addEventListener('click', function(e) {
-                if (!isMarkerVisible) return;
-                
-                const intersection = e.detail.intersection;
-                if (intersection && intersection.object.el.classList.contains('parchment')) {
-                    if (!isDrawing) {
-                        startDrawing(intersection.point);
-                    } else {
-                        addPointToDrawing(intersection.point);
-                    }
-                }
-            });
-            
-            // Демонстраційний режим - можна малювати мишею/дотиком
-            console.log('👆 Використовуйте мишу або дотик для малювання на пергаменті');
-        }
-
-        // === ПОЧАТОК МАЛЮВАННЯ ===
-        function startDrawing(position) {
-            isDrawing = true;
-            currentPoints = [position];
-            
-            // Створюємо нову лінію
-            currentLine = document.createElement('a-entity');
-            currentLine.setAttribute('line', {
-                points: currentPoints.map(p => `${p.x} ${p.y} ${p.z}`).join(', '),
-                color: '#5D2A00',
-                lineWidth: 8
-            });
-            
-            drawingSurface.appendChild(currentLine);
-            document.getElementById('status').textContent = '✍️ Пишемо...';
-            document.getElementById('status').classList.add('pulse');
-        }
-
-        // === ДОДАВАННЯ ТОЧКИ ===
-        function addPointToDrawing(position) {
-            if (!isDrawing || !currentLine) return;
-            
-            currentPoints.push(position);
-            
-            // Оновлюємо лінію
-            currentLine.setAttribute('line', {
-                points: currentPoints.map(p => `${p.x} ${p.y} ${p.z}`).join(', '),
-                color: '#5D2A00',
-                lineWidth: 8
-            });
-        }
-
-        // === ЗАКІНЧЕННЯ МАЛЮВАННЯ ===
-        function stopDrawing() {
-            if (!isDrawing) return;
-            
-            isDrawing = false;
-            currentLine = null;
-            currentPoints = [];
-            
-            document.getElementById('status').textContent = '✅ Напис додано! Пишіть ще';
-            document.getElementById('status').classList.remove('pulse');
-            
-            setTimeout(() => {
-                if (isMarkerVisible) {
-                    document.getElementById('status').textContent = '✅ Маркер знайдено! Покажіть палець ✋';
-                }
-            }, 2000);
         }
 
         // === ОЧИЩЕННЯ ===
@@ -387,6 +545,8 @@
             // Видаляємо всі намальовані лінії
             const lines = drawingSurface.querySelectorAll('[line]');
             lines.forEach(line => drawingSurface.removeChild(line));
+            
+            console.log('🧹 Очищено всі малюнки');
             
             document.getElementById('status').textContent = '🧹 Все очищено!';
             document.getElementById('status').classList.add('success');
@@ -406,137 +566,85 @@
                 return;
             }
             
-            // Використовуємо A-Frame's screenshot функцію
-            sceneEl.components.screenshot.capture('perspective');
-            
-            document.getElementById('status').textContent = '📸 Знімок збережено!';
-            document.getElementById('status').classList.add('success');
-            
-            setTimeout(() => {
-                if (isMarkerVisible) {
-                    document.getElementById('status').textContent = '✅ Маркер знайдено! Покажіть палець ✋';
-                    document.getElementById('status').classList.remove('success');
-                }
-            }, 2000);
+            try {
+                // Використовуємо A-Frame's screenshot функцію
+                sceneEl.components.screenshot.capture('perspective');
+                
+                console.log('📸 Знімок зроблено');
+                
+                document.getElementById('status').textContent = '📸 Знімок збережено!';
+                document.getElementById('status').classList.add('success');
+                
+                setTimeout(() => {
+                    if (isMarkerVisible) {
+                        document.getElementById('status').textContent = '✅ Маркер знайдено! Покажіть палець ✋';
+                        document.getElementById('status').classList.remove('success');
+                    }
+                }, 2000);
+            } catch (error) {
+                console.error('❌ Помилка знімка:', error);
+                alert('Помилка при знімку екрана');
+            }
         }
 
         // === ІНФОРМАЦІЯ ПРО МАРКЕР ===
         function showMarkerInfo() {
             document.getElementById('marker-info').style.display = 'block';
-            
-            // Генеруємо URL маркера
-            const markerUrl = 'https://cdn.jsdelivr.net/gh/hiukim/mind-ar-js@1.2.3/examples/image-tracking/assets/band-example/band.mind';
-            document.getElementById('marker-image').src = markerUrl;
         }
 
         function hideMarkerInfo() {
             document.getElementById('marker-info').style.display = 'none';
         }
 
-        // === ДЕМО-ФУНКЦІОНАЛ ДЛЯ МАЛЮВАННЯ ===
-        // Додаємо можливість малювання мишею/дотиком для демонстрації
-        let isDemoDrawing = false;
-        let demoLine = null;
-        let demoPoints = [];
-
-        sceneEl.addEventListener('mousedown', function(e) {
-            if (!isMarkerVisible) return;
+        // === ДЕМО-ФУНКЦІОНАЛ ДЛЯ ТЕСТУВАННЯ ===
+        function setupDemoDrawing() {
+            console.log('🎮 Демо-режим малювання активовано');
             
-            const intersection = getIntersection(e);
-            if (intersection && intersection.object.el.classList.contains('parchment')) {
-                isDemoDrawing = true;
-                startDemoDrawing(intersection.point);
-            }
-        });
-
-        sceneEl.addEventListener('mousemove', function(e) {
-            if (!isDemoDrawing || !isMarkerVisible) return;
-            
-            const intersection = getIntersection(e);
-            if (intersection) {
-                addPointToDemoDrawing(intersection.point);
-            }
-        });
-
-        sceneEl.addEventListener('mouseup', function() {
-            if (isDemoDrawing) {
-                isDemoDrawing = false;
-                demoLine = null;
-                demoPoints = [];
-            }
-        });
-
-        // Для сенсорних пристроїв
-        sceneEl.addEventListener('touchstart', function(e) {
-            if (!isMarkerVisible) return;
-            
-            const touch = e.touches[0];
-            const intersection = getIntersection(touch);
-            if (intersection && intersection.object.el.classList.contains('parchment')) {
-                isDemoDrawing = true;
-                startDemoDrawing(intersection.point);
-                e.preventDefault();
-            }
-        });
-
-        sceneEl.addEventListener('touchmove', function(e) {
-            if (!isDemoDrawing || !isMarkerVisible) return;
-            
-            const touch = e.touches[0];
-            const intersection = getIntersection(touch);
-            if (intersection) {
-                addPointToDemoDrawing(intersection.point);
-            }
-            e.preventDefault();
-        });
-
-        sceneEl.addEventListener('touchend', function() {
-            if (isDemoDrawing) {
-                isDemoDrawing = false;
-                demoLine = null;
-                demoPoints = [];
-            }
-        });
-
-        function getIntersection(input) {
-            // Спрощена функція для отримання точки перетину
-            const cameraEl = document.querySelector('a-camera');
-            const raycaster = cameraEl.components.raycaster;
-            
-            if (input.clientX && input.clientY) {
+            // Додаємо можливість малювання мишею для тестування
+            sceneEl.addEventListener('mousedown', function(e) {
+                if (!isMarkerVisible) return;
+                
+                const cameraEl = document.querySelector('a-camera');
+                const raycaster = cameraEl.components.raycaster;
                 raycaster.refreshObjects();
                 const intersections = raycaster.intersectObjects(raycaster.objects, false);
-                return intersections[0] || null;
-            }
-            return null;
+                
+                if (intersections.length > 0) {
+                    const intersection = intersections[0];
+                    if (intersection.object.el.classList.contains('drawable')) {
+                        const point = intersection.point;
+                        if (!isDrawing) {
+                            startDrawing(point);
+                        }
+                    }
+                }
+            });
+
+            sceneEl.addEventListener('mousemove', function(e) {
+                if (!isDrawing || !isMarkerVisible) return;
+                
+                const cameraEl = document.querySelector('a-camera');
+                const raycaster = cameraEl.components.raycaster;
+                raycaster.refreshObjects();
+                const intersections = raycaster.intersectObjects(raycaster.objects, false);
+                
+                if (intersections.length > 0) {
+                    const intersection = intersections[0];
+                    if (intersection.object.el.classList.contains('drawable')) {
+                        addPointToDrawing(intersection.point);
+                    }
+                }
+            });
+
+            sceneEl.addEventListener('mouseup', function() {
+                if (isDrawing) {
+                    stopDrawing();
+                }
+            });
         }
 
-        function startDemoDrawing(position) {
-            demoPoints = [position];
-            
-            demoLine = document.createElement('a-entity');
-            demoLine.setAttribute('line', {
-                points: demoPoints.map(p => `${p.x} ${p.y} ${p.z}`).join(', '),
-                color: '#5D2A00',
-                lineWidth: 8
-            });
-            
-            drawingSurface.appendChild(demoLine);
-            document.getElementById('status').textContent = '✍️ Пишемо...';
-            document.getElementById('status').classList.add('pulse');
-        }
-
-        function addPointToDemoDrawing(position) {
-            if (!isDemoDrawing || !demoLine) return;
-            
-            demoPoints.push(position);
-            
-            demoLine.setAttribute('line', {
-                points: demoPoints.map(p => `${p.x} ${p.y} ${p.z}`).join(', '),
-                color: '#5D2A00',
-                lineWidth: 8
-            });
-        }
+        // Запускаємо демо-режим
+        setTimeout(setupDemoDrawing, 3000);
     </script>
 </body>
 </html>
