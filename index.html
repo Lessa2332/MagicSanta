@@ -2,15 +2,16 @@
 <html lang="uk">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>🎅 Магічний Лист Санті - WebAR</title>
-    <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
-    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+    <script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/AR-js-org/AR.js@3.4.4/aframe/build/aframe-ar.js"></script>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            touch-action: none; /* Запобігає зуму та скролу на мобільному */
         }
 
         body {
@@ -18,6 +19,10 @@
             background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
             overflow: hidden;
             height: 100vh;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
         }
 
         /* Інструкції */
@@ -32,18 +37,21 @@
             background: rgba(0, 0, 0, 0.7);
             padding: 10px;
             border-radius: 0 0 20px 20px;
+            max-height: 20vh;
+            overflow-y: auto;
         }
 
         .instructions h2 {
             margin-bottom: 5px;
-            font-size: 1.2em;
+            font-size: clamp(1em, 4vw, 1.2em);
             text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
         }
 
         .instructions p {
             margin: 3px 0;
-            font-size: 0.9em;
+            font-size: clamp(0.8em, 3vw, 0.9em);
             opacity: 0.9;
+            line-height: 1.3;
         }
 
         /* Кнопки */
@@ -54,24 +62,28 @@
             width: 100%;
             display: flex;
             justify-content: center;
-            gap: 15px;
+            gap: 10px;
             z-index: 1000;
+            padding: 0 10px;
+            flex-wrap: wrap;
         }
 
         .control-btn {
-            padding: 12px 20px;
+            padding: clamp(10px, 4vw, 12px) clamp(15px, 5vw, 20px);
             background: linear-gradient(45deg, #FF3366, #FF6B6B);
             color: white;
             border: none;
             border-radius: 25px;
-            font-size: 16px;
+            font-size: clamp(14px, 4vw, 16px);
             font-weight: bold;
             cursor: pointer;
             box-shadow: 0 4px 15px rgba(255, 51, 102, 0.4);
             transition: all 0.3s ease;
+            min-width: 80px;
+            touch-action: manipulation; /* Покращує touch на мобільному */
         }
 
-        .control-btn:hover {
+        .control-btn:hover, .control-btn:active {
             transform: scale(1.05);
         }
 
@@ -93,11 +105,13 @@
             align-items: center;
             color: white;
             z-index: 10000;
+            text-align: center;
+            padding: 20px;
         }
 
         .spinner {
-            width: 40px;
-            height: 40px;
+            width: clamp(30px, 8vw, 40px);
+            height: clamp(30px, 8vw, 40px);
             border: 4px solid rgba(255,255,255,0.3);
             border-top: 4px solid white;
             border-radius: 50%;
@@ -123,8 +137,11 @@
             text-align: center;
             z-index: 10000;
             display: none;
-            max-width: 80%;
+            max-width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
             border: 2px solid #FFD700;
+            font-size: clamp(14px, 4vw, 16px);
         }
 
         /* Індикатор запису */
@@ -141,6 +158,7 @@
             padding: 20px;
             border-radius: 20px;
             border: 3px solid #FF3366;
+            max-width: 90%;
         }
 
         .pulse-ring {
@@ -153,7 +171,7 @@
         }
 
         .mic-icon {
-            font-size: 30px;
+            font-size: clamp(24px, 6vw, 30px);
             margin-bottom: 10px;
         }
 
@@ -164,10 +182,40 @@
 
         /* Адаптація для маленьких екранів */
         @media (max-width: 480px) {
-            .instructions h2 { font-size: 1.1em; }
-            .instructions p { font-size: 0.8em; }
-            .control-btn { padding: 10px 15px; font-size: 14px; }
-            .controls { gap: 10px; bottom: 10px; }
+            .instructions { 
+                top: 5px; 
+                padding: 8px; 
+                max-height: 25vh; 
+            }
+            .controls { 
+                bottom: 10px; 
+                gap: 8px; 
+                padding: 0 5px; 
+            }
+            .control-btn { 
+                min-width: 70px; 
+                font-size: 14px; 
+            }
+            #loading { padding: 10px; }
+            .message { padding: 12px 15px; }
+            #listeningIndicator { padding: 15px; }
+        }
+
+        /* Для ландшафтної орієнтації на мобільному */
+        @media (orientation: landscape) and (max-height: 500px) {
+            .instructions { 
+                position: fixed; 
+                top: 0; 
+                max-height: 15vh; 
+                font-size: 0.8em; 
+            }
+            .controls { bottom: 5px; gap: 5px; }
+            .control-btn { padding: 8px 12px; font-size: 12px; }
+        }
+
+        /* Приховати елементи для VR/AR фокусу */
+        a-scene:focus {
+            outline: none;
         }
     </style>
 </head>
@@ -204,9 +252,10 @@
     <!-- AR Сцена -->
     <a-scene 
         embedded 
-        arjs="sourceType: webcam; debugUIEnabled: false;"
-        renderer="logarithmicDepthBuffer: true; colorManagement: true;"
+        arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3;"
+        renderer="logarithmicDepthBuffer: true; colorManagement: true; antialias: true;"
         vr-mode-ui="enabled: false"
+        device-orientation-permission-ui="enabled: true;"
     >
         <!-- Камера -->
         <a-camera gps-camera rotation-reader></a-camera>
@@ -234,6 +283,7 @@
                 this.floatingTexts = [];
                 this.audioContext = null;
                 this.analyser = null;
+                this.mediaStream = null; // Для об'єднаного стріму
                 
                 this.init();
             }
@@ -243,6 +293,7 @@
                 await this.waitForSceneLoad();
                 
                 // Ініціалізуємо системи
+                await this.initUnifiedMedia(); // Об'єднаний стрім для відео+аудіо
                 this.initSpeechRecognition();
                 this.initSnowSystem();
                 this.initAudioAnalysis();
@@ -265,8 +316,21 @@
                 });
             }
 
+            async initUnifiedMedia() {
+                try {
+                    this.mediaStream = await navigator.mediaDevices.getUserMedia({ 
+                        video: { facingMode: 'environment' }, // Задня камера для AR
+                        audio: true 
+                    });
+                    // Підключення до AR.js (якщо потрібно, але AR.js сам обробляє webcam)
+                    console.log('Медіа-стрім ініціалізовано');
+                } catch (err) {
+                    console.error('Помилка доступу до медіа:', err);
+                    this.showMessage('Дозволь доступ до камери та мікрофона 📱🎤');
+                }
+            }
+
             initSpeechRecognition() {
-                // Перевіряємо підтримку
                 if (!('webkitSpeechRecognition' in window)) {
                     this.showMessage('Твій браузер не підтримує голосовий ввід 😢 Спробуй Chrome на Android');
                     return;
@@ -275,7 +339,7 @@
                 this.recognition = new webkitSpeechRecognition();
                 this.recognition.continuous = true;
                 this.recognition.interimResults = true;
-                this.recognition.lang = 'uk-UA'; // Українська мова
+                this.recognition.lang = 'uk-UA';
                 this.recognition.maxAlternatives = 3;
 
                 this.recognition.onstart = () => {
@@ -288,7 +352,6 @@
                     let bestTranscript = '';
                     let highestConfidence = 0;
 
-                    // Шукаємо найкращий варіант розпізнавання
                     for (let i = event.resultIndex; i < event.results.length; i++) {
                         const result = event.results[i];
                         
@@ -329,59 +392,38 @@
             processUkrainianText(text, confidence) {
                 console.log('Розпізнано:', text, 'Впевненість:', confidence);
                 
-                // Покращуємо текст
                 let improvedText = this.improveUkrainianText(text);
                 
-                // Створюємо плаваючий текст
                 this.createFloatingText(improvedText);
                 
-                // Святкуємо
                 this.celebrateTextCreation();
                 
-                // Показуємо фідбек
                 this.showRecognitionFeedback(improvedText, confidence);
             }
 
             improveUkrainianText(text) {
-                // Корекція поширених помилок
                 const corrections = {
-                    'санто': 'Санта',
-                    'добрий день': 'Добрий Санта',
-                    'добрий вечір': 'Добрий Санта',
-                    'хочу': 'хочу',
-                    'хотіла': 'хочу',
-                    'хотів': 'хочу',
-                    'подарунок': 'подарунок',
+                    'санто': 'санта',
+                    'добрий день': 'добрий санто',
+                    'добрий вечір': 'добрий санто',
                     'подаруночок': 'подарунок',
-                    'ляльку': 'ляльку',
                     'лялька': 'ляльку',
-                    'машинку': 'машинку',
                     'машинка': 'машинку',
-                    'конструктор': 'конструктор',
                     'лего': 'конструктор',
-                    'книжку': 'книжку',
                     'книга': 'книжку',
-                    'їжачка': 'їжачка',
-                    'зайчика': 'зайчика',
-                    'ведмедика': 'ведмедика',
                     'ведмедик': 'ведмедика',
-                    'мішку': 'мішку',
                     'планшет': 'планшет',
-                    'телефон': 'телефон',
                     'ролики': 'ролики',
-                    'велосипед': 'велосипед',
                     'велосипеда': 'велосипед'
                 };
 
                 let improved = text.toLowerCase();
                 
-                // Замінюємо помилки
                 Object.keys(corrections).forEach(wrong => {
                     const right = corrections[wrong];
-                    improved = improved.replace(new RegExp(wrong, 'g'), right);
+                    improved = improved.replace(new RegExp(wrong, 'gi'), right);
                 });
 
-                // Велика перша літера
                 improved = improved.charAt(0).toUpperCase() + improved.slice(1);
                 
                 return improved;
@@ -412,7 +454,6 @@
             }
 
             initSnowSystem() {
-                // Створюємо 25 сніжинок
                 for (let i = 0; i < 25; i++) {
                     this.createSnowflake();
                 }
@@ -421,7 +462,6 @@
             createSnowflake() {
                 const snowflake = document.createElement('a-entity');
                 
-                // Випадкова позиція
                 const x = (Math.random() - 0.5) * 4;
                 const y = Math.random() * 3 + 1;
                 const z = -2 - Math.random() * 3;
@@ -439,13 +479,15 @@
                     shader: 'flat'
                 });
                 
-                // Анімація падіння
+                // Анімація падіння з from: auto для плавності
                 const fallDuration = 3000 + Math.random() * 4000;
-                snowflake.setAttribute('animation', {
+                snowflake.setAttribute('animation__fall', {
                     property: 'position',
                     to: `${x} ${y - 5} ${z}`,
+                    from: 'auto',
                     dur: fallDuration,
-                    loop: true
+                    loop: true,
+                    easing: 'easeInQuad'
                 });
                 
                 // Обертання
@@ -461,19 +503,15 @@
             }
 
             initAudioAnalysis() {
+                if (!this.mediaStream) return;
+                
                 try {
                     this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
                     this.analyser = this.audioContext.createAnalyser();
                     
-                    navigator.mediaDevices.getUserMedia({ audio: true })
-                        .then(stream => {
-                            const source = this.audioContext.createMediaStreamSource(stream);
-                            source.connect(this.analyser);
-                            this.startAudioAnalysis();
-                        })
-                        .catch(err => {
-                            console.log('Мікрофон не доступний:', err);
-                        });
+                    const source = this.audioContext.createMediaStreamSource(this.mediaStream);
+                    source.connect(this.analyser);
+                    this.startAudioAnalysis();
                 } catch (e) {
                     console.log('Web Audio API не підтримується');
                 }
@@ -486,10 +524,8 @@
                 const analyze = () => {
                     this.analyser.getByteFrequencyData(dataArray);
                     
-                    // Розраховуємо гучність
                     const volume = dataArray.reduce((a, b) => a + b) / dataArray.length / 256;
                     
-                    // Оновлюємо сніжинки
                     this.updateSnowflakes(volume);
                     
                     requestAnimationFrame(analyze);
@@ -500,17 +536,23 @@
 
             updateSnowflakes(volume) {
                 this.snowflakes.forEach((snowflake) => {
-                    // Швидкість падіння залежить від гучності
-                    const speed = 4000 / (volume * 10 + 1);
-                    snowflake.setAttribute('animation', {
+                    const posStr = snowflake.getAttribute('position');
+                    if (!posStr) return;
+                    const pos = posStr.split(' ').map(Number);
+                    
+                    // Падіння відносно поточного y (на 3 одиниці вниз)
+                    const speed = Math.max(1000, 4000 / (volume * 10 + 1)); // Мінімальна швидкість
+                    const newY = pos[1] - 3;
+                    
+                    snowflake.setAttribute('animation__fall', {
                         property: 'position',
-                        to: snowflake.getAttribute('position').x + ' -2 ' + snowflake.getAttribute('position').z,
+                        to: `${pos[0]} ${newY} ${pos[2]}`,
+                        from: 'auto',
                         dur: speed,
                         loop: true
                     });
                     
-                    // Розмір збільшується з гучністю
-                    const scale = 0.8 + volume * 2;
+                    const scale = Math.min(2, 0.8 + volume * 2); // Ліміт масштабу
                     snowflake.setAttribute('scale', `${scale} ${scale} 1`);
                 });
             }
@@ -518,7 +560,6 @@
             createFloatingText(text) {
                 const textEntity = document.createElement('a-entity');
                 
-                // Випадкова позиція перед камерою
                 const x = (Math.random() - 0.5) * 2;
                 const y = Math.random() * 1 + 0.5;
                 const z = -2;
@@ -532,8 +573,7 @@
                     wrapCount: 20
                 });
 
-                // Анімація з'явлення
-                textEntity.setAttribute('animation', {
+                textEntity.setAttribute('animation__scale', {
                     property: 'scale',
                     from: '0 0 0',
                     to: '1 1 1',
@@ -541,7 +581,6 @@
                     easing: 'easeOutElastic'
                 });
 
-                // Анімація плавання
                 textEntity.setAttribute('animation__float', {
                     property: 'position',
                     to: `${x + 0.1} ${y + 0.05} ${z}`,
@@ -561,25 +600,28 @@
             }
 
             celebrateTextCreation() {
-                // Танок сніжинок
                 this.danceSnowflakes();
-                
-                // Магічні іскри
                 this.createMagicSparks();
             }
 
             danceSnowflakes() {
                 this.snowflakes.forEach(snowflake => {
+                    const posStr = snowflake.getAttribute('position');
+                    if (!posStr) return;
+                    const pos = posStr.split(' ').map(Number);
+                    const offsetX = (Math.random() - 0.5) * 0.3;
+                    const offsetY = (Math.random() - 0.2) * 0.3;
+                    
                     snowflake.setAttribute('animation__dance', {
                         property: 'position',
-                        to: `${snowflake.getAttribute('position').x + (Math.random() - 0.5) * 0.3} ${snowflake.getAttribute('position').y + (Math.random() - 0.2) * 0.3} ${snowflake.getAttribute('position').z}`,
+                        to: `${pos[0] + offsetX} ${pos[1] + offsetY} ${pos[2]}`,
+                        from: 'auto',
                         dur: 600,
                         dir: 'alternate',
                         loop: true
                     });
                 });
 
-                // Зупиняємо танок через 1.5 секунди
                 setTimeout(() => {
                     this.snowflakes.forEach(snowflake => {
                         snowflake.removeAttribute('animation__dance');
@@ -607,7 +649,7 @@
                     color: this.getRandomColor(),
                     shader: 'flat'
                 });
-                spark.setAttribute('animation', {
+                spark.setAttribute('animation__scale', {
                     property: 'scale',
                     from: '1 1 1',
                     to: '0 0 0',
@@ -641,7 +683,7 @@
                     shader: 'flat',
                     opacity: 0.8
                 });
-                ring.setAttribute('animation', {
+                ring.setAttribute('animation__scale', {
                     property: 'scale',
                     from: '1 1 1',
                     to: '3 3 3',
@@ -769,6 +811,13 @@
                 <p>Оновіть сторінку та спробуйте знову</p>
                 <button class="control-btn" onclick="location.reload()" style="margin-top: 20px;">🔄 Оновити</button>
             `;
+        });
+
+        // Обробка орієнтації для мобільного
+        window.addEventListener('orientationchange', () => {
+            setTimeout(() => {
+                window.scrollTo(0, 1); // Фікс для iOS viewport
+            }, 100);
         });
     </script>
 </body>
