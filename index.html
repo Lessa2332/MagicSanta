@@ -1,823 +1,690 @@
 <!DOCTYPE html>
-<html lang="uk">
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>🎅 Магічний Лист Санті - WebAR</title>
-    <script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
-    <script src="https://raw.githack.com/AR-js-org/AR.js/3.4.7/aframe/build/aframe-ar.js"></script>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            touch-action: none; /* Запобігає зуму та скролу на мобільному */
-        }
-
-        body {
-            font-family: 'Comic Sans MS', cursive, sans-serif;
-            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
-            overflow: hidden;
-            height: 100vh;
-            -webkit-user-select: none;
-            -moz-user-select: none;
-            -ms-user-select: none;
-            user-select: none;
-        }
-
-        /* Інструкції */
-        .instructions {
-            position: absolute;
-            top: 10px;
-            left: 0;
-            width: 100%;
-            text-align: center;
-            color: white;
-            z-index: 1000;
-            background: rgba(0, 0, 0, 0.7);
-            padding: 10px;
-            border-radius: 0 0 20px 20px;
-            max-height: 20vh;
-            overflow-y: auto;
-        }
-
-        .instructions h2 {
-            margin-bottom: 5px;
-            font-size: clamp(1em, 4vw, 1.2em);
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
-        }
-
-        .instructions p {
-            margin: 3px 0;
-            font-size: clamp(0.8em, 3vw, 0.9em);
-            opacity: 0.9;
-            line-height: 1.3;
-        }
-
-        /* Кнопки */
-        .controls {
-            position: absolute;
-            bottom: 15px;
-            left: 0;
-            width: 100%;
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-            z-index: 1000;
-            padding: 0 10px;
-            flex-wrap: wrap;
-        }
-
-        .control-btn {
-            padding: clamp(10px, 4vw, 12px) clamp(15px, 5vw, 20px);
-            background: linear-gradient(45deg, #FF3366, #FF6B6B);
-            color: white;
-            border: none;
-            border-radius: 25px;
-            font-size: clamp(14px, 4vw, 16px);
-            font-weight: bold;
-            cursor: pointer;
-            box-shadow: 0 4px 15px rgba(255, 51, 102, 0.4);
-            transition: all 0.3s ease;
-            min-width: 80px;
-            touch-action: manipulation; /* Покращує touch на мобільному */
-        }
-
-        .control-btn:hover, .control-btn:active {
-            transform: scale(1.05);
-        }
-
-        .control-btn:active {
-            transform: scale(0.95);
-        }
-
-        /* Загрузка */
-        #loading {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(135deg, #1a2a6c, #b21f1f);
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            color: white;
-            z-index: 10000;
-            text-align: center;
-            padding: 20px;
-        }
-
-        .spinner {
-            width: clamp(30px, 8vw, 40px);
-            height: clamp(30px, 8vw, 40px);
-            border: 4px solid rgba(255,255,255,0.3);
-            border-top: 4px solid white;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin-bottom: 15px;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        /* Повідомлення */
-        .message {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: rgba(0,0,0,0.9);
-            color: white;
-            padding: 15px 20px;
-            border-radius: 15px;
-            text-align: center;
-            z-index: 10000;
-            display: none;
-            max-width: 90%;
-            max-height: 80vh;
-            overflow-y: auto;
-            border: 2px solid #FFD700;
-            font-size: clamp(14px, 4vw, 16px);
-        }
-
-        /* Індикатор запису */
-        #listeningIndicator {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            text-align: center;
-            color: white;
-            z-index: 10000;
-            display: none;
-            background: rgba(0,0,0,0.8);
-            padding: 20px;
-            border-radius: 20px;
-            border: 3px solid #FF3366;
-            max-width: 90%;
-        }
-
-        .pulse-ring {
-            width: 80px;
-            height: 80px;
-            border: 3px solid #FF3366;
-            border-radius: 50%;
-            animation: pulse 1.5s infinite;
-            margin: 0 auto 15px;
-        }
-
-        .mic-icon {
-            font-size: clamp(24px, 6vw, 30px);
-            margin-bottom: 10px;
-        }
-
-        @keyframes pulse {
-            0% { transform: scale(0.8); opacity: 1; }
-            100% { transform: scale(1.5); opacity: 0; }
-        }
-
-        /* Адаптація для маленьких екранів */
-        @media (max-width: 480px) {
-            .instructions { 
-                top: 5px; 
-                padding: 8px; 
-                max-height: 25vh; 
-            }
-            .controls { 
-                bottom: 10px; 
-                gap: 8px; 
-                padding: 0 5px; 
-            }
-            .control-btn { 
-                min-width: 70px; 
-                font-size: 14px; 
-            }
-            #loading { padding: 10px; }
-            .message { padding: 12px 15px; }
-            #listeningIndicator { padding: 15px; }
-        }
-
-        /* Для ландшафтної орієнтації на мобільному */
-        @media (orientation: landscape) and (max-height: 500px) {
-            .instructions { 
-                position: fixed; 
-                top: 0; 
-                max-height: 15vh; 
-                font-size: 0.8em; 
-            }
-            .controls { bottom: 5px; gap: 5px; }
-            .control-btn { padding: 8px 12px; font-size: 12px; }
-        }
-
-        /* Приховати елементи для VR/AR фокусу */
-        a-scene:focus {
-            outline: none;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>AR Thank You Letter</title>
+  <style>
+    * { 
+      margin: 0; 
+      padding: 0; 
+      box-sizing: border-box; 
+    }
+    
+    body { 
+      overflow: hidden; 
+      font-family: 'Georgia', serif; 
+      background: linear-gradient(135deg, #1a1a2e, #16213e);
+      color: white;
+    }
+    
+    #container { 
+      position: relative; 
+      width: 100vw; 
+      height: 100vh; 
+    }
+    
+    canvas { 
+      display: block; 
+    }
+    
+    #ui {
+      position: absolute; 
+      top: 20px; 
+      left: 20px; 
+      right: 20px;
+      display: flex; 
+      justify-content: space-between; 
+      align-items: center;
+      z-index: 100;
+      font-size: 16px;
+      background: rgba(0, 0, 0, 0.6);
+      padding: 12px 20px;
+      border-radius: 15px;
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    button {
+      background: linear-gradient(135deg, #e65c00, #F9D423);
+      color: white; 
+      border: none;
+      padding: 12px 24px; 
+      border-radius: 30px; 
+      font-weight: bold;
+      font-family: 'Georgia', serif;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+      cursor: pointer;
+      transition: all 0.3s ease;
+      margin-left: 5px;
+    }
+    
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(230, 92, 0, 0.4);
+    }
+    
+    #status { 
+      color: #ffcc80; 
+      font-size: 18px;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+    }
+    
+    #controls {
+      display: flex;
+      gap: 10px;
+    }
+    
+    #clearBtn {
+      background: linear-gradient(135deg, #8e44ad, #9b59b6);
+    }
+    
+    #langBtn {
+      background: linear-gradient(135deg, #27ae60, #2ecc71);
+      font-size: 14px;
+      padding: 8px 16px;
+    }
+    
+    #instructions {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      text-align: center;
+      background: rgba(0, 0, 0, 0.7);
+      padding: 15px 25px;
+      border-radius: 15px;
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      max-width: 90%;
+    }
+    
+    #instructions h3 {
+      margin-bottom: 8px;
+      color: #F9D423;
+    }
+    
+    #instructions p {
+      margin-bottom: 5px;
+      font-size: 14px;
+    }
+    
+    .pulse {
+      animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+      0% { opacity: 0.7; }
+      50% { opacity: 1; }
+      100% { opacity: 0.7; }
+    }
+    
+    .success {
+      color: #2ecc71 !important;
+    }
+    
+    .recording {
+      background: linear-gradient(135deg, #e74c3c, #c0392b) !important;
+      animation: recordingPulse 1.5s infinite;
+    }
+    
+    @keyframes recordingPulse {
+      0% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.7); }
+      70% { box-shadow: 0 0 0 10px rgba(231, 76, 60, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0); }
+    }
+  </style>
 </head>
 <body>
-    <!-- Загрузка -->
-    <div id="loading">
-        <div class="spinner"></div>
-        <h2>Завантажуємо різдвяну магію... ✨</h2>
-        <p>Перевіряємо мікрофон та камеру</p>
-    </div>
+  <div id="container">
+    <video id="video" playsinline style="display:none;"></video>
+    <canvas id="canvas"></canvas>
 
-    <!-- Інструкції -->
-    <div class="instructions">
-        <h2>🎅 Магічний Лист Санті</h2>
-        <p>🎤 Натисни "Говорити" та скажи побажання українською</p>
-        <p>❄️ Сміхайся - сніжинки будуть танцювати!</p>
+    <div id="ui">
+      <div id="status">Point your index finger ✋</div>
+      <div id="controls">
+        <button id="langBtn">🇺🇦 UA</button>
+        <button id="clearBtn">Clear</button>
+        <button id="recordBtn">Record Video</button>
+      </div>
     </div>
-
-    <!-- Індикатор запису -->
-    <div id="listeningIndicator">
-        <div class="pulse-ring"></div>
-        <div class="mic-icon">🎤</div>
-        <p>Слухаю твої побажання...</p>
-        <p style="font-size: 0.8em; opacity: 0.8;">Говори чітко та голосно!</p>
+    
+    <div id="instructions">
+      <h3>How to use:</h3>
+      <p>1. Show your index finger to the camera</p>
+      <p>2. Extend your finger to start drawing in the air</p>
+      <p>3. Bend your finger to finish the stroke</p>
     </div>
+  </div>
 
-    <!-- Кнопки керування -->
-    <div class="controls">
-        <button class="control-btn" onclick="toggleVoiceRecognition()">🎤 Говорити</button>
-        <button class="control-btn" onclick="clearAllText()">🧹 Очистити</button>
-        <button class="control-btn" onclick="showHelp()">❓ Допомога</button>
-    </div>
+  <!-- Three.js -->
+  <script src="https://cdn.jsdelivr.net/npm/three@0.157.0/build/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.157.0/examples/js/controls/OrbitControls.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.157.0/examples/js/loaders/SVGLoader.js"></script>
 
-    <!-- AR Сцена -->
-    <a-scene 
-        embedded 
-        arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3;"
-        renderer="logarithmicDepthBuffer: true; colorManagement: true; antialias: true;"
-        vr-mode-ui="enabled: false"
-        device-orientation-permission-ui="enabled: true;"
-    >
-        <!-- Камера -->
-        <a-camera gps-camera rotation-reader></a-camera>
+  <!-- MediaPipe Hands -->
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4/hands.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils@0.3/camera_utils.js" crossorigin="anonymous"></script>
+
+  <script>
+    // Language support
+    const translations = {
+      en: {
+        title: 'AR Thank You Letter',
+        status: {
+          initial: 'Point your index finger ✋',
+          drawing: 'Drawing... ✍️',
+          done: 'Done! Draw more.',
+          clear: 'Text cleared! ✨',
+          recording: 'Recording... ⏺',
+          saved: 'Video saved! 🎥'
+        },
+        instructions: {
+          title: 'How to use:',
+          step1: '1. Show your index finger to the camera',
+          step2: '2. Extend your finger to start drawing in the air',
+          step3: '3. Bend your finger to finish the stroke'
+        },
+        buttons: {
+          clear: 'Clear',
+          record: 'Record Video',
+          stop: 'Stop Recording',
+          lang: '🇺🇦 UA'
+        },
+        header: 'Thank You Letter'
+      },
+      uk: {
+        title: 'AR-лист подяки',
+        status: {
+          initial: 'Наведи вказівний палець ✋',
+          drawing: 'Пишу... ✍️',
+          done: 'Готово! Напиши ще.',
+          clear: 'Текст очищено! ✨',
+          recording: 'Запис... ⏺',
+          saved: 'Відео збережено! 🎥'
+        },
+        instructions: {
+          title: 'Як користуватися:',
+          step1: '1. Покажіть вказівний палець камері',
+          step2: '2. Витягніть палець, щоб почати писати в повітрі',
+          step3: '3. Зігніть палець, щоб закінчити напис'
+        },
+        buttons: {
+          clear: 'Очистити',
+          record: 'Записати відео',
+          stop: 'Зупинити запис',
+          lang: '🇺🇸 EN'
+        },
+        header: 'Лист Подяки'
+      }
+    };
+
+    let currentLang = 'en';
+    let camera, scene, renderer, scroll, textGroup;
+    let hands;
+    let isDrawing = false;
+    let currentPath = [];
+    let recordedChunks = [];
+    let mediaRecorder;
+    let isRecording = false;
+    let fingerTrail = [];
+
+    // Language switch function
+    function switchLanguage(lang) {
+      currentLang = lang;
+      const t = translations[currentLang];
+      
+      document.title = t.title;
+      
+      // Update status
+      status.textContent = t.status.initial;
+      
+      // Update instructions
+      const inst = document.getElementById('instructions');
+      inst.innerHTML = `
+        <h3>${t.instructions.title}</h3>
+        <p>${t.instructions.step1}</p>
+        <p>${t.instructions.step2}</p>
+        <p>${t.instructions.step3}</p>
+      `;
+      
+      // Update buttons
+      clearBtn.textContent = t.buttons.clear;
+      recordBtn.textContent = t.buttons.record;
+      langBtn.textContent = t.buttons.lang;
+      
+      // Update header in texture (recreate if needed)
+      if (scroll) {
+        createParchment(); // Recreate to update header
+      }
+    }
+
+    // === Елементи ===
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    const status = document.getElementById('status');
+    const recordBtn = document.getElementById('recordBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const langBtn = document.getElementById('langBtn');
+    const instructions = document.getElementById('instructions');
+
+    // === Three.js ініціалізація ===
+    function initThree() {
+      scene = new THREE.Scene();
+      scene.background = new THREE.Color(0x000000);
+      
+      camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 100);
+      camera.position.set(0, 0, 3);
+
+      renderer = new THREE.WebGLRenderer({ 
+        canvas, 
+        alpha: true, 
+        antialias: true,
+        preserveDrawingBuffer: true // Для запису відео
+      });
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.shadowMap.enabled = true;
+      renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+      // Освітлення
+      const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+      scene.add(ambientLight);
+      
+      const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+      directionalLight.position.set(5, 10, 7);
+      directionalLight.castShadow = true;
+      scene.add(directionalLight);
+
+      // Створення пергаменту
+      createParchment();
+      
+      // Група для тексту
+      textGroup = new THREE.Group();
+      scene.add(textGroup);
+
+      // Анімація
+      animate();
+    }
+
+    // === Створення пергаменту ===
+    function createParchment() {
+      // Remove old scroll if exists
+      if (scroll) scene.remove(scroll);
+      
+      // Основа пергаменту
+      const parchmentGeometry = new THREE.PlaneGeometry(2.5, 3.5);
+      const parchmentTexture = createParchmentTexture();
+      
+      const parchmentMaterial = new THREE.MeshLambertMaterial({ 
+        map: parchmentTexture,
+        transparent: true,
+        opacity: 0.95
+      });
+      
+      const parchment = new THREE.Mesh(parchmentGeometry, parchmentMaterial);
+      parchment.position.set(0, 0, -1);
+      parchment.rotation.x = -0.1;
+      parchment.receiveShadow = true;
+      scene.add(parchment);
+      
+      scroll = parchment;
+
+      // Декоративні елементи
+      addParchmentDetails();
+    }
+
+    // === Текстура пергаменту ===
+    function createParchmentTexture() {
+      const t = translations[currentLang];
+      const canvas = document.createElement('canvas');
+      canvas.width = 512;
+      canvas.height = 512;
+      const ctx = canvas.getContext('2d');
+      
+      // Основний колір пергаменту
+      ctx.fillStyle = '#f4e4bc';
+      ctx.fillRect(0, 0, 512, 512);
+      
+      // Текстура старого паперу
+      ctx.fillStyle = 'rgba(139, 69, 19, 0.05)';
+      for (let i = 0; i < 200; i++) {
+        const x = Math.random() * 512;
+        const y = Math.random() * 512;
+        const size = Math.random() * 30 + 10;
+        ctx.beginPath();
+        ctx.arc(x, y, size, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      
+      // Краї
+      ctx.strokeStyle = '#8b4513';
+      ctx.lineWidth = 15;
+      ctx.strokeRect(10, 10, 492, 492);
+      
+      // Заголовок
+      ctx.fillStyle = '#5d2a00';
+      ctx.font = 'bold 40px Georgia';
+      ctx.textAlign = 'center';
+      ctx.fillText(t.header, 256, 80);
+      
+      // Лінія під заголовком
+      ctx.beginPath();
+      ctx.moveTo(80, 100);
+      ctx.lineTo(432, 100);
+      ctx.strokeStyle = '#8b4513';
+      ctx.lineWidth = 3;
+      ctx.stroke();
+
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.wrapS = THREE.RepeatWrapping;
+      texture.wrapT = THREE.RepeatWrapping;
+      
+      return texture;
+    }
+
+    // === Деталі пергаменту ===
+    function addParchmentDetails() {
+      // Кути пергаменту
+      const cornerGeometry = new THREE.PlaneGeometry(0.3, 0.3);
+      const cornerMaterial = new THREE.MeshLambertMaterial({ 
+        color: 0x8b4513,
+        transparent: true,
+        opacity: 0.8
+      });
+      
+      const positions = [
+        [-1.1, 1.55, -0.9], [1.1, 1.55, -0.9],
+        [-1.1, -1.55, -0.9], [1.1, -1.55, -0.9]
+      ];
+      
+      positions.forEach(pos => {
+        const corner = new THREE.Mesh(cornerGeometry, cornerMaterial);
+        corner.position.set(...pos);
+        corner.rotation.x = -0.1;
+        scene.add(corner);
+      });
+    }
+
+    // === Анімація ===
+    function animate() {
+      requestAnimationFrame(animate);
+      
+      // Анімація сліду пальця
+      if (fingerTrail.length > 0) {
+        fingerTrail.forEach((point, index) => {
+          point.material.opacity = 1 - (index / fingerTrail.length);
+          point.scale.multiplyScalar(0.95);
+        });
         
-        <!-- Освітлення -->
-        <a-light type="ambient" color="#4455AA" intensity="0.6"></a-light>
-        <a-light type="directional" position="1 2 1" intensity="0.8" color="#FFEEDD"></a-light>
-
-        <!-- Контейнер для тексту -->
-        <a-entity id="textContainer"></a-entity>
-
-        <!-- Система сніжинок -->
-        <a-entity id="snowSystem"></a-entity>
-
-        <!-- Магічні ефекти -->
-        <a-entity id="magicEffects"></a-entity>
-    </a-scene>
-
-    <script>
-        class MagicSantaLetter {
-            constructor() {
-                this.isListening = false;
-                this.recognition = null;
-                this.snowflakes = [];
-                this.floatingTexts = [];
-                this.audioContext = null;
-                this.analyser = null;
-                this.mediaStream = null; // Для аудіо-стріму
-                
-                this.init();
-            }
-
-            async init() {
-                // Чекаємо завантаження сцени
-                await this.waitForSceneLoad();
-                
-                // Ініціалізуємо системи
-                await this.initAudioStream(); // Тільки аудіо, щоб уникнути конфлікту з AR.js
-                this.initSpeechRecognition();
-                this.initSnowSystem();
-                this.initAudioAnalysis();
-                
-                // Ховаємо загрузку
-                setTimeout(() => {
-                    document.getElementById('loading').style.display = 'none';
-                    this.showMessage('Вітаю! Говори українською до Санти! 🎅');
-                }, 2000);
-            }
-
-            waitForSceneLoad() {
-                return new Promise((resolve) => {
-                    const scene = document.querySelector('a-scene');
-                    if (scene.hasLoaded) {
-                        resolve();
-                    } else {
-                        scene.addEventListener('loaded', resolve);
-                    }
-                });
-            }
-
-            async initAudioStream() {
-                try {
-                    // Тільки аудіо, AR.js обробить відео окремо
-                    this.mediaStream = await navigator.mediaDevices.getUserMedia({ 
-                        audio: true 
-                    });
-                    console.log('Аудіо-стрім ініціалізовано');
-                } catch (err) {
-                    console.error('Помилка доступу до аудіо:', err);
-                    this.showMessage('Дозволь доступ до мікрофона 📤');
-                }
-            }
-
-            initSpeechRecognition() {
-                if (!('webkitSpeechRecognition' in window)) {
-                    this.showMessage('Твій браузер не підтримує голосовий ввід 😢 Спробуй Chrome на Android');
-                    return;
-                }
-
-                this.recognition = new webkitSpeechRecognition();
-                this.recognition.continuous = true;
-                this.recognition.interimResults = true;
-                this.recognition.lang = 'uk-UA';
-                this.recognition.maxAlternatives = 3;
-
-                this.recognition.onstart = () => {
-                    this.isListening = true;
-                    this.showListeningIndicator();
-                    this.createMagicEffect();
-                };
-
-                this.recognition.onresult = (event) => {
-                    let bestTranscript = '';
-                    let highestConfidence = 0;
-
-                    for (let i = event.resultIndex; i < event.results.length; i++) {
-                        const result = event.results[i];
-                        
-                        if (result.isFinal) {
-                            for (let j = 0; j < result.length; j++) {
-                                const alternative = result[j];
-                                if (alternative.confidence > highestConfidence) {
-                                    highestConfidence = alternative.confidence;
-                                    bestTranscript = alternative.transcript;
-                                }
-                            }
-                        }
-                    }
-
-                    if (bestTranscript && highestConfidence > 0.1) {
-                        this.processUkrainianText(bestTranscript, highestConfidence);
-                    }
-                };
-
-                this.recognition.onerror = (event) => {
-                    console.log('Помилка розпізнавання:', event.error);
-                    
-                    if (event.error === 'not-allowed') {
-                        this.showMessage('Дозволь доступ до мікрофона в налаштуваннях браузера 📱');
-                    } else if (event.error === 'network') {
-                        this.showMessage('Перевір підключення до інтернету 🌐');
-                    }
-                    
-                    this.hideListeningIndicator();
-                };
-
-                this.recognition.onend = () => {
-                    this.isListening = false;
-                    this.hideListeningIndicator();
-                };
-            }
-
-            processUkrainianText(text, confidence) {
-                console.log('Розпізнано:', text, 'Впевненість:', confidence);
-                
-                let improvedText = this.improveUkrainianText(text);
-                
-                this.createFloatingText(improvedText);
-                
-                this.celebrateTextCreation();
-                
-                this.showRecognitionFeedback(improvedText, confidence);
-            }
-
-            improveUkrainianText(text) {
-                const corrections = {
-                    'санто': 'санта',
-                    'добрий день': 'добрий санто',
-                    'добрий вечір': 'добрий санто',
-                    'подаруночок': 'подарунок',
-                    'лялька': 'ляльку',
-                    'машинка': 'машинку',
-                    'лего': 'конструктор',
-                    'книга': 'книжку',
-                    'ведмедик': 'ведмедика',
-                    'планшет': 'планшет',
-                    'ролики': 'ролики',
-                    'велосипеда': 'велосипед'
-                };
-
-                let improved = text.toLowerCase();
-                
-                Object.keys(corrections).forEach(wrong => {
-                    const right = corrections[wrong];
-                    improved = improved.replace(new RegExp(wrong, 'gi'), right);
-                });
-
-                improved = improved.charAt(0).toUpperCase() + improved.slice(1);
-                
-                return improved;
-            }
-
-            showRecognitionFeedback(text, confidence) {
-                const confidenceColor = confidence > 0.7 ? '#4CAF50' : 
-                                      confidence > 0.4 ? '#FF9800' : '#F44336';
-                
-                const feedback = document.createElement('div');
-                feedback.className = 'message';
-                feedback.innerHTML = `
-                    <div style="margin-bottom: 8px;">🗣️ Розпізнано:</div>
-                    <div style="font-size: 1.1em; margin: 8px 0; color: #FFD700;">"${text}"</div>
-                    <div style="font-size: 0.9em; color: ${confidenceColor}">
-                        Якість: ${Math.round(confidence * 100)}%
-                    </div>
-                `;
-                feedback.style.display = 'block';
-                
-                document.body.appendChild(feedback);
-                
-                setTimeout(() => {
-                    if (feedback.parentNode) {
-                        feedback.parentNode.removeChild(feedback);
-                    }
-                }, 2500);
-            }
-
-            initSnowSystem() {
-                for (let i = 0; i < 25; i++) {
-                    this.createSnowflake();
-                }
-            }
-
-            createSnowflake() {
-                const snowflake = document.createElement('a-entity');
-                
-                const x = (Math.random() - 0.5) * 4;
-                const y = Math.random() * 3 + 1;
-                const z = -2 - Math.random() * 3;
-                const fallDuration = 3000 + Math.random() * 4000;
-                
-                snowflake.setAttribute('position', `${x} ${y} ${z}`);
-                snowflake.setAttribute('geometry', {
-                    primitive: 'plane',
-                    width: 0.08,
-                    height: 0.08
-                });
-                snowflake.setAttribute('material', {
-                    color: '#FFFFFF',
-                    transparent: true,
-                    opacity: 0.7 + Math.random() * 0.3,
-                    shader: 'flat'
-                });
-                
-                // Зберігаємо початкову позицію для циклічного падіння
-                snowflake.setAttribute('data-initial-y', y);
-                
-                // Анімація падіння
-                snowflake.setAttribute('animation__fall', {
-                    property: 'position',
-                    to: `${x} ${y - 5} ${z}`,
-                    dur: fallDuration,
-                    loop: true,
-                    easing: 'easeInQuad'
-                });
-                
-                // Обертання
-                snowflake.setAttribute('animation__rotation', {
-                    property: 'rotation',
-                    to: '0 0 360',
-                    dur: 2000 + Math.random() * 3000,
-                    loop: true
-                });
-
-                document.querySelector('#snowSystem').appendChild(snowflake);
-                this.snowflakes.push(snowflake);
-            }
-
-            initAudioAnalysis() {
-                if (!this.mediaStream) return;
-                
-                try {
-                    this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                    this.analyser = this.audioContext.createAnalyser();
-                    
-                    const source = this.audioContext.createMediaStreamSource(this.mediaStream);
-                    source.connect(this.analyser);
-                    this.startAudioAnalysis();
-                } catch (e) {
-                    console.log('Web Audio API не підтримується');
-                }
-            }
-
-            startAudioAnalysis() {
-                const bufferLength = this.analyser.frequencyBinCount;
-                const dataArray = new Uint8Array(bufferLength);
-                
-                const analyze = () => {
-                    this.analyser.getByteFrequencyData(dataArray);
-                    
-                    const volume = dataArray.reduce((a, b) => a + b) / dataArray.length / 256;
-                    
-                    this.updateSnowflakes(volume);
-                    
-                    requestAnimationFrame(analyze);
-                };
-                
-                analyze();
-            }
-
-            updateSnowflakes(volume) {
-                this.snowflakes.forEach((snowflake) => {
-                    const posStr = snowflake.getAttribute('position');
-                    if (!posStr) return;
-                    const pos = posStr.split(' ').map(Number);
-                    const initialY = parseFloat(snowflake.getAttribute('data-initial-y')) || pos[1];
-                    
-                    // Швидкість на основі гучності
-                    const speed = Math.max(1000, 4000 / (volume * 10 + 1));
-                    
-                    // Оновлюємо dur, але не to, щоб уникнути дрейфу; to лишаємо фіксованим від initial
-                    snowflake.setAttribute('animation__fall', {
-                        dur: speed,
-                        loop: true
-                    });
-                    
-                    const scale = Math.min(2, 0.8 + volume * 2);
-                    snowflake.setAttribute('scale', `${scale} ${scale} 1`);
-                });
-            }
-
-            createFloatingText(text) {
-                const textEntity = document.createElement('a-entity');
-                
-                const x = (Math.random() - 0.5) * 2;
-                const y = Math.random() * 1 + 0.5;
-                const z = -2;
-                
-                textEntity.setAttribute('position', `${x} ${y} ${z}`);
-                textEntity.setAttribute('text', {
-                    value: text,
-                    color: this.getRandomColor(),
-                    align: 'center',
-                    width: 3,
-                    wrapCount: 20
-                });
-
-                textEntity.setAttribute('animation__scale', {
-                    property: 'scale',
-                    from: '0 0 0',
-                    to: '1 1 1',
-                    dur: 1500,
-                    easing: 'easeOutElastic'
-                });
-
-                textEntity.setAttribute('animation__float', {
-                    property: 'position',
-                    to: `${x + 0.1} ${y + 0.05} ${z}`,
-                    dur: 6000,
-                    easing: 'easeInOutSine',
-                    dir: 'alternate',
-                    loop: true
-                });
-
-                document.querySelector('#textContainer').appendChild(textEntity);
-                this.floatingTexts.push(textEntity);
-            }
-
-            getRandomColor() {
-                const colors = ['#FF6B6B', '#4ECDC4', '#FFE66D', '#6B48FF', '#FF8E53', '#00FFAA'];
-                return colors[Math.floor(Math.random() * colors.length)];
-            }
-
-            celebrateTextCreation() {
-                this.danceSnowflakes();
-                this.createMagicSparks();
-            }
-
-            danceSnowflakes() {
-                this.snowflakes.forEach(snowflake => {
-                    const posStr = snowflake.getAttribute('position');
-                    if (!posStr) return;
-                    const pos = posStr.split(' ').map(Number);
-                    const offsetX = (Math.random() - 0.5) * 0.3;
-                    const offsetY = (Math.random() - 0.2) * 0.3;
-                    
-                    snowflake.setAttribute('animation__dance', {
-                        property: 'position',
-                        to: `${pos[0] + offsetX} ${pos[1] + offsetY} ${pos[2]}`,
-                        from: 'auto',
-                        dur: 600,
-                        dir: 'alternate',
-                        loop: true
-                    });
-                });
-
-                setTimeout(() => {
-                    this.snowflakes.forEach(snowflake => {
-                        snowflake.removeAttribute('animation__dance');
-                    });
-                }, 1500);
-            }
-
-            createMagicSparks() {
-                for (let i = 0; i < 6; i++) {
-                    this.createSpark();
-                }
-            }
-
-            createSpark() {
-                const spark = document.createElement('a-entity');
-                const x = (Math.random() - 0.5) * 1.5;
-                const y = Math.random() * 0.8 + 0.3;
-                
-                spark.setAttribute('position', `${x} ${y} -1.8`);
-                spark.setAttribute('geometry', {
-                    primitive: 'sphere',
-                    radius: 0.015
-                });
-                spark.setAttribute('material', {
-                    color: this.getRandomColor(),
-                    shader: 'flat'
-                });
-                spark.setAttribute('animation__scale', {
-                    property: 'scale',
-                    from: '1 1 1',
-                    to: '0 0 0',
-                    dur: 1000
-                });
-                spark.setAttribute('animation__move', {
-                    property: 'position',
-                    to: `${x + (Math.random() - 0.5) * 0.2} ${y + Math.random() * 0.3} -1.8`,
-                    dur: 1000
-                });
-
-                document.querySelector('#magicEffects').appendChild(spark);
-                
-                setTimeout(() => {
-                    if (spark.parentNode) {
-                        spark.parentNode.removeChild(spark);
-                    }
-                }, 1000);
-            }
-
-            createMagicEffect() {
-                const ring = document.createElement('a-entity');
-                ring.setAttribute('position', '0 0.5 -1');
-                ring.setAttribute('geometry', {
-                    primitive: 'ring',
-                    radiusInner: 0.05,
-                    radiusOuter: 0.1
-                });
-                ring.setAttribute('material', {
-                    color: '#FFD700',
-                    shader: 'flat',
-                    opacity: 0.8
-                });
-                ring.setAttribute('animation__scale', {
-                    property: 'scale',
-                    from: '1 1 1',
-                    to: '3 3 3',
-                    dur: 800
-                });
-                ring.setAttribute('animation__fade', {
-                    property: 'material.opacity',
-                    to: 0,
-                    dur: 800
-                });
-
-                document.querySelector('a-scene').appendChild(ring);
-                
-                setTimeout(() => {
-                    if (ring.parentNode) {
-                        ring.parentNode.removeChild(ring);
-                    }
-                }, 800);
-            }
-
-            showListeningIndicator() {
-                document.getElementById('listeningIndicator').style.display = 'block';
-            }
-
-            hideListeningIndicator() {
-                document.getElementById('listeningIndicator').style.display = 'none';
-            }
-
-            showMessage(text) {
-                const message = document.createElement('div');
-                message.className = 'message';
-                message.textContent = text;
-                message.style.display = 'block';
-                document.body.appendChild(message);
-                
-                setTimeout(() => {
-                    if (message.parentNode) {
-                        message.parentNode.removeChild(message);
-                    }
-                }, 3000);
-            }
-
-            startListening() {
-                if (this.recognition && !this.isListening) {
-                    try {
-                        this.recognition.start();
-                    } catch (error) {
-                        this.showMessage('Натисни "Говорити" ще раз!');
-                    }
-                }
-            }
-
-            stopListening() {
-                if (this.recognition && this.isListening) {
-                    this.recognition.stop();
-                }
-            }
-
-            clearAllText() {
-                this.floatingTexts.forEach(text => {
-                    if (text.parentNode) {
-                        text.parentNode.removeChild(text);
-                    }
-                });
-                this.floatingTexts = [];
-                
-                this.showMessage('Лист очищено! Можна писати знову ✨');
-            }
+        // Видаляємо старі точки
+        while (fingerTrail.length > 0 && fingerTrail[0].material.opacity < 0.1) {
+          scene.remove(fingerTrail.shift());
         }
+      }
+      
+      renderer.render(scene, camera);
+    }
 
-        // Глобальні функції для кнопок
-        let santaApp;
+    // === MediaPipe Hands ===
+    function onResults(results) {
+      const t = translations[currentLang];
+      ctx.save();
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(results.image, 0, 0, canvas.width, canvas.height);
 
-        function toggleVoiceRecognition() {
-            if (!santaApp) return;
+      if (results.multiHandLandmarks && results.multiHandedness) {
+        for (let i = 0; i < results.multiHandLandmarks.length; i++) {
+          const landmarks = results.multiHandLandmarks[i];
+          const handedness = results.multiHandedness[i];
+
+          // Вказівний палець — кінчик
+          const tip = landmarks[8]; // INDEX_FINGER_TIP
+          const mcp = landmarks[5]; // INDEX_FINGER_MCP
+
+          const x = tip.x * canvas.width;
+          const y = tip.y * canvas.height;
+          const baseX = mcp.x * canvas.width;
+          const baseY = mcp.y * canvas.height;
+
+          // Перетворення в 3D
+          const ndcX = (x / canvas.width) * 2 - 1;
+          const ndcY = -(y / canvas.height) * 2 + 1;
+          const vector = new THREE.Vector3(ndcX, ndcY, 0.2);
+          vector.unproject(camera);
+
+          // Відстань між кінчиком і основою
+          const dist = Math.hypot(x - baseX, y - baseY);
+
+          // Якщо палець "витягнутий" — малюємо
+          if (dist > 50) {
+            if (!isDrawing) {
+              isDrawing = true;
+              currentPath = [];
+              status.textContent = t.status.drawing;
+              status.classList.add('pulse');
+            }
             
-            if (santaApp.isListening) {
-                santaApp.stopListening();
-            } else {
-                santaApp.startListening();
-            }
-        }
-
-        function clearAllText() {
-            if (santaApp) {
-                santaApp.clearAllText();
-            }
-        }
-
-        function showHelp() {
-            const helpText = `🎅 ДОПОМОГА ДЛЯ МАЛЕНЬКОГО ДРУЗА 🎅
-
-🎤 Як говорити:
-• Тримай телефон як мікрофон
-• Говори чітко та голосно
-• Використовуй прості слова
-
-💬 Приклади фраз:
-• "Добрий Санта"
-• "Я хочу ведмедика"
-• "Подаруй мені ляльку"
-• "Принеси книжку"
-• "Я хочу машинку"
-
-❄️ Чарівність:
-• Сміхайся - сніжинки танцюють!
-• Говори голосніше - сніжинки стають більшими!
-• Дивись, як слова літають у повітрі!
-
-🎄 Веселих свят!`;
+            currentPath.push(vector.clone());
             
-            alert(helpText);
+            // Додаємо слід пальця
+            addFingerTrail(vector.clone());
+            
+          } else {
+            if (isDrawing) {
+              isDrawing = false;
+              addTextToScroll(currentPath);
+              currentPath = [];
+              status.textContent = t.status.done;
+              status.classList.remove('pulse');
+              status.classList.add('success');
+              setTimeout(() => status.classList.remove('success'), 2000);
+            }
+          }
+
+          // Візуалізація пальця
+          ctx.beginPath();
+          ctx.arc(x, y, 15, 0, Math.PI * 2);
+          ctx.fillStyle = isDrawing ? '#F9D423' : '#e65c00';
+          ctx.fill();
+          ctx.strokeStyle = '#5d2a00';
+          ctx.lineWidth = 3;
+          ctx.stroke();
+          
+          // Лінія до основи пальця
+          ctx.beginPath();
+          ctx.moveTo(x, y);
+          ctx.lineTo(baseX, baseY);
+          ctx.strokeStyle = isDrawing ? '#F9D423' : '#e65c00';
+          ctx.lineWidth = 2;
+          ctx.stroke();
         }
+      } else {
+        if (isDrawing) {
+          isDrawing = false;
+          addTextToScroll(currentPath);
+          currentPath = [];
+          status.classList.remove('pulse');
+        }
+        status.textContent = t.status.initial;
+      }
 
-        // Запуск додатку при завантаженні
-        window.addEventListener('DOMContentLoaded', () => {
-            santaApp = new MagicSantaLetter();
-        });
+      ctx.restore();
+    }
 
-        // Обробка помилок
-        window.addEventListener('error', (event) => {
-            console.error('Помилка:', event.error);
-            document.getElementById('loading').innerHTML = `
-                <h2>Щось пішло не так 😢</h2>
-                <p>Оновіть сторінку та спробуйте знову</p>
-                <button class="control-btn" onclick="location.reload()" style="margin-top: 20px;">🔄 Оновити</button>
-            `;
-        });
+    // === Додаємо слід пальця ===
+    function addFingerTrail(position) {
+      const geometry = new THREE.SphereGeometry(0.02, 8, 8);
+      const material = new THREE.MeshBasicMaterial({ 
+        color: 0xF9D423,
+        transparent: true,
+        opacity: 0.7
+      });
+      
+      const sphere = new THREE.Mesh(geometry, material);
+      sphere.position.copy(position);
+      scene.add(sphere);
+      
+      fingerTrail.push(sphere);
+    }
 
-        // Обробка орієнтації для мобільного
-        window.addEventListener('orientationchange', () => {
-            setTimeout(() => {
-                window.scrollTo(0, 1); // Фікс для iOS viewport
-            }, 100);
-        });
-    </script>
+    // === Додаємо текст на пергамент ===
+    function addTextToScroll(path) {
+      if (path.length < 10) return;
+
+      const curve = new THREE.CatmullRomCurve3(path);
+      const points = curve.getPoints(100);
+
+      const geometry = new THREE.BufferGeometry().setFromPoints(points);
+      const material = new THREE.LineBasicMaterial({ 
+        color: 0x5d2a00, 
+        linewidth: 2 
+      });
+      
+      const line = new THREE.Line(geometry, material);
+      textGroup.add(line);
+      
+      // Додаємо тінь
+      const shadowGeometry = new THREE.BufferGeometry().setFromPoints(points);
+      const shadowMaterial = new THREE.LineBasicMaterial({ 
+        color: 0x000000, 
+        transparent: true,
+        opacity: 0.3 
+      });
+      
+      const shadow = new THREE.Line(shadowGeometry, shadowMaterial);
+      shadow.position.z = -0.01;
+      textGroup.add(shadow);
+    }
+
+    // === Очищення тексту ===
+    function clearText() {
+      const t = translations[currentLang];
+      while (textGroup.children.length > 0) {
+        textGroup.remove(textGroup.children[0]);
+      }
+      status.textContent = t.status.clear;
+      status.classList.add('success');
+      setTimeout(() => {
+        status.textContent = t.status.initial;
+        status.classList.remove('success');
+      }, 2000);
+    }
+
+    // === Запис відео ===
+    function startRecording() {
+      const t = translations[currentLang];
+      recordedChunks = [];
+      const stream = canvas.captureStream(30);
+      mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/webm; codecs=vp9' });
+
+      mediaRecorder.ondataavailable = e => {
+        if (e.data.size > 0) {
+          recordedChunks.push(e.data);
+        }
+      };
+      
+      mediaRecorder.onstop = () => {
+        const blob = new Blob(recordedChunks, { type: 'video/webm' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `thankyou_${new Date().toISOString().replace(/[:.]/g, '-')}.webm`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        
+        status.textContent = t.status.saved;
+        status.classList.add('success');
+        setTimeout(() => {
+          status.textContent = t.status.initial;
+          status.classList.remove('success');
+        }, 3000);
+      };
+
+      mediaRecorder.start(1000); // Збирає дані кожну секунду
+      isRecording = true;
+      recordBtn.textContent = t.buttons.stop;
+      recordBtn.classList.add('recording');
+      status.textContent = t.status.recording;
+    }
+
+    function stopRecording() {
+      const t = translations[currentLang];
+      if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+        mediaRecorder.stop();
+      }
+      isRecording = false;
+      recordBtn.textContent = t.buttons.record;
+      recordBtn.classList.remove('recording');
+    }
+
+    // === Ініціалізація ===
+    window.onload = () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+
+      initThree();
+
+      // Налаштування MediaPipe Hands
+      hands = new Hands({
+        locateFile: (file) => {
+          return `https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4/${file}`;
+        }
+      });
+      
+      hands.setOptions({
+        maxNumHands: 1,
+        modelComplexity: 1,
+        minDetectionConfidence: 0.7,
+        minTrackingConfidence: 0.7
+      });
+      
+      hands.onResults(onResults);
+
+      // Запуск камери
+      const cameraFeed = new Camera(video, {
+        onFrame: async () => {
+          await hands.send({ image: video });
+        },
+        width: 640,
+        height: 480
+      });
+      
+      cameraFeed.start();
+
+      // Обробники подій
+      langBtn.onclick = () => {
+        switchLanguage(currentLang === 'en' ? 'uk' : 'en');
+      };
+      
+      recordBtn.onclick = () => {
+        if (isRecording) {
+          stopRecording();
+        } else {
+          startRecording();
+        }
+      };
+      
+      clearBtn.onclick = clearText;
+
+      // Обробник зміни розміру вікна
+      window.addEventListener('resize', () => {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+      });
+
+      // Автоматично приховати інструкції через 10 секунд
+      setTimeout(() => {
+        instructions.style.opacity = '0.7';
+        instructions.style.transition = 'opacity 1s';
+      }, 10000);
+    };
+  </script>
 </body>
 </html>
