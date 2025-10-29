@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AR Лист Подяки з MindAR</title>
+    <title>🎄 Різдвяний AR Лист Подяки</title>
     <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.3/dist/mindar-image.prod.js"></script>
     <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.3/dist/mindar-image-aframe.prod.js"></script>
@@ -18,15 +18,20 @@
         
         body {
             font-family: 'Georgia', serif;
-            background: linear-gradient(135deg, #8B4513, #A0522D);
+            background: linear-gradient(135deg, #1a5276, #2980b9);
             color: white;
             overflow: hidden;
+            touch-action: none;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
         }
         
         #container {
             position: relative;
             width: 100vw;
             height: 100vh;
+            overflow: hidden;
         }
         
         .ar-overlay {
@@ -51,58 +56,99 @@
         
         #ui {
             position: absolute;
-            top: 20px;
-            left: 20px;
-            right: 20px;
+            top: 15px;
+            left: 15px;
+            right: 15px;
             display: flex;
             justify-content: space-between;
             align-items: center;
             z-index: 100;
-            background: rgba(139, 69, 19, 0.9);
-            padding: 15px 20px;
-            border-radius: 15px;
-            backdrop-filter: blur(10px);
-            border: 2px solid rgba(244, 228, 188, 0.5);
+            background: rgba(255, 255, 255, 0.15);
+            padding: 12px 15px;
+            border-radius: 20px;
+            backdrop-filter: blur(15px);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
         }
         
         #status {
-            color: #F4E4BC;
-            font-size: 18px;
+            color: #FFD700;
+            font-size: 16px;
             font-weight: bold;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+            flex: 1;
+            text-align: center;
+            padding: 0 10px;
         }
         
         .control-btn {
-            background: linear-gradient(135deg, #D2691E, #CD853F);
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
             color: white;
             border: none;
-            padding: 12px 20px;
-            border-radius: 25px;
+            padding: 10px 16px;
+            border-radius: 20px;
             font-family: 'Georgia', serif;
             font-weight: bold;
             cursor: pointer;
-            margin-left: 10px;
-            border: 2px solid #F4E4BC;
+            margin: 0 4px;
+            border: 2px solid rgba(255, 255, 255, 0.5);
             transition: all 0.3s ease;
+            font-size: 14px;
+            box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3);
+            min-width: 60px;
         }
         
         .control-btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            box-shadow: 0 6px 20px rgba(231, 76, 60, 0.4);
+        }
+        
+        .control-btn:active {
+            transform: translateY(0);
+        }
+        
+        #clearBtn {
+            background: linear-gradient(135deg, #27ae60, #2ecc71);
+            box-shadow: 0 4px 15px rgba(39, 174, 96, 0.3);
+        }
+        
+        #screenshotBtn {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+        }
+        
+        #markerBtn {
+            background: linear-gradient(135deg, #9b59b6, #8e44ad);
+            box-shadow: 0 4px 15px rgba(155, 89, 182, 0.3);
         }
         
         #instructions {
             position: absolute;
-            bottom: 20px;
+            bottom: 15px;
             left: 50%;
             transform: translateX(-50%);
             text-align: center;
-            background: rgba(139, 69, 19, 0.9);
-            padding: 20px;
-            border-radius: 15px;
+            background: rgba(255, 255, 255, 0.15);
+            padding: 15px 20px;
+            border-radius: 20px;
             z-index: 100;
-            max-width: 90%;
-            backdrop-filter: blur(10px);
-            border: 2px solid rgba(244, 228, 188, 0.5);
+            max-width: 95%;
+            backdrop-filter: blur(15px);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+        
+        #instructions h3 {
+            color: #FFD700;
+            margin-bottom: 8px;
+            font-size: 18px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        }
+        
+        #instructions p {
+            margin: 4px 0;
+            font-size: 14px;
+            color: #ecf0f1;
         }
         
         #marker-info {
@@ -111,22 +157,27 @@
             left: 50%;
             transform: translate(-50%, -50%);
             text-align: center;
-            background: rgba(0, 0, 0, 0.9);
-            padding: 30px;
-            border-radius: 15px;
+            background: rgba(44, 62, 80, 0.95);
+            padding: 25px;
+            border-radius: 20px;
             z-index: 200;
-            border: 3px solid #F4E4BC;
+            border: 3px solid #FFD700;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(20px);
+            max-width: 90%;
         }
         
         #marker-image {
-            max-width: 300px;
-            margin: 20px 0;
-            border: 3px solid #F4E4BC;
-            border-radius: 10px;
+            max-width: 280px;
+            margin: 15px 0;
+            border: 3px solid #FFD700;
+            border-radius: 12px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
         }
         
         .success {
-            color: #90EE90 !important;
+            color: #2ecc71 !important;
+            text-shadow: 0 0 10px rgba(46, 204, 113, 0.5);
         }
         
         .pulse {
@@ -145,22 +196,24 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: linear-gradient(135deg, #8B4513, #A0522D);
+            background: linear-gradient(135deg, #1a5276, #2980b9);
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
             z-index: 1000;
+            transition: opacity 1s ease;
         }
         
         .loader {
             width: 50px;
             height: 50px;
-            border: 5px solid rgba(244, 228, 188, 0.3);
-            border-top: 5px solid #F4E4BC;
+            border: 4px solid rgba(255, 215, 0, 0.3);
+            border-top: 4px solid #FFD700;
             border-radius: 50%;
             animation: spin 1s linear infinite;
             margin-bottom: 20px;
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
         }
         
         @keyframes spin {
@@ -170,30 +223,142 @@
         
         .finger-indicator {
             position: absolute;
-            width: 30px;
-            height: 30px;
-            background: rgba(255, 0, 0, 0.7);
+            width: 25px;
+            height: 25px;
+            background: radial-gradient(circle, #e74c3c, #c0392b);
             border-radius: 50%;
-            border: 3px solid white;
+            border: 2px solid white;
             z-index: 50;
             pointer-events: none;
             display: none;
+            box-shadow: 0 0 15px rgba(231, 76, 60, 0.7);
+            animation: fingerPulse 1.5s infinite;
+        }
+        
+        @keyframes fingerPulse {
+            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.7); }
+            70% { transform: scale(1.1); box-shadow: 0 0 0 10px rgba(231, 76, 60, 0); }
+            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(231, 76, 60, 0); }
+        }
+        
+        .snowflake {
+            position: absolute;
+            color: white;
+            font-size: 20px;
+            user-select: none;
+            pointer-events: none;
+            z-index: 2;
+            text-shadow: 0 0 8px rgba(255, 255, 255, 0.8);
+            animation: snowFall linear infinite;
+        }
+        
+        @keyframes snowFall {
+            0% { 
+                transform: translateY(-100px) rotate(0deg) scale(0.5); 
+                opacity: 0; 
+            }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { 
+                transform: translateY(100vh) rotate(360deg) scale(1); 
+                opacity: 0; 
+            }
+        }
+        
+        /* Адаптивність */
+        @media (max-width: 768px) {
+            #ui {
+                padding: 10px 12px;
+                border-radius: 15px;
+            }
+            
+            #status {
+                font-size: 14px;
+                padding: 0 8px;
+            }
+            
+            .control-btn {
+                padding: 8px 12px;
+                font-size: 12px;
+                min-width: 50px;
+                margin: 0 3px;
+            }
+            
+            #instructions {
+                padding: 12px 15px;
+                border-radius: 15px;
+            }
+            
+            #instructions h3 {
+                font-size: 16px;
+            }
+            
+            #instructions p {
+                font-size: 12px;
+            }
+            
+            #marker-image {
+                max-width: 250px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            #ui {
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 8px;
+            }
+            
+            #status {
+                order: -1;
+                width: 100%;
+                margin-bottom: 8px;
+            }
+            
+            .control-btn {
+                padding: 6px 10px;
+                font-size: 11px;
+                min-width: 45px;
+            }
+            
+            #instructions {
+                padding: 10px 12px;
+            }
+            
+            #instructions h3 {
+                font-size: 14px;
+            }
+            
+            #instructions p {
+                font-size: 11px;
+            }
+        }
+        
+        @media (max-height: 700px) {
+            #instructions {
+                bottom: 10px;
+                padding: 10px 15px;
+            }
+            
+            #ui {
+                top: 10px;
+            }
         }
     </style>
 </head>
 <body>
     <div id="loading">
         <div class="loader"></div>
-        <div>Завантаження AR...</div>
+        <div style="color: #FFD700; font-size: 18px; text-align: center;">🎄 Завантаження Різдвяної Магії... ✨</div>
     </div>
 
     <div id="container">
         <div id="marker-info">
-            <h3>🎯 Налаштування маркера</h3>
-            <p>Роздрукуйте цей маркер або відкрийте на іншому пристрої:</p>
+            <h3 style="color: #FFD700; margin-bottom: 15px;">🎯 Різдвяний Маркер</h3>
+            <p style="color: #ecf0f1; margin-bottom: 15px;">Роздрукуйте цей маркер або відкрийте на іншому пристрої:</p>
             <img id="marker-image" src="https://cdn.jsdelivr.net/gh/hiukim/mind-ar-js@1.2.3/examples/image-tracking/assets/band-example/band-target.png" alt="AR Marker">
-            <p>Наведіть камеру на маркер, щоб почати</p>
-            <button class="control-btn" onclick="hideMarkerInfo()">Понятно</button>
+            <p style="color: #ecf0f1; margin: 15px 0;">Наведіть камеру на маркер, щоб почати створювати різдвяні побажання! 🎄</p>
+            <button class="control-btn" onclick="hideMarkerInfo()" style="background: linear-gradient(135deg, #e67e22, #d35400);">Понятно!</button>
         </div>
 
         <!-- Відео для MediaPipe -->
@@ -201,6 +366,9 @@
         
         <!-- Індикатор пальця -->
         <div class="finger-indicator" id="fingerIndicator"></div>
+
+        <!-- Сніжинки -->
+        <div id="snowflakes-container"></div>
 
         <div class="ar-overlay">
             <a-scene 
@@ -210,10 +378,11 @@
                 renderer="colorManagement: true, physicallyCorrectLights"
                 vr-mode-ui="enabled: false"
                 device-orientation-permission-ui="enabled: false"
+                screenshot="width: 1280; height: 720"
             >
                 <a-assets>
-                    <!-- Текстура пергаменту -->
-                    <img id="parchment-texture" src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIgdmlld0JveD0iMCAwIDUxMiA1MTIiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSI1MTIiIGhlaWdodD0iNTEyIiByeD0iMjAiIGZpbGw9IiNGNEU0QkMiLz4KPHJlY3QgeD0iMTAiIHk9IjEwIiB3aWR0aD0iNDkyIiBoZWlnaHQ9IjQ5MiIgcng9IjE1IiBzdHJva2U9IiM4QjQ1MTMiIHN0cm9rZS13aWR0aD0iOCIvPgo8dGV4dCB4PSIyNTYiIHk9IjYwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LWZhbWlseT0iR2VvcmdpYSIgZm9udC1zaXplPSIzMiIgZmlsbD0iIzVENEEwMCI+0JvQuNGE0Ysg0J/QvtC00LTQtdC60YHQsNC9PC90ZXh0Pgo8bGluZSB4MT0iODAiIHkxPSI4MCIgeDI9IjQzMiIgeTI9IjgwIiBzdHJva2U9IiM4QjQ1MTMiIHN0cm9rZS13aWR0aD0iNCIvPgo8L3N2Zz4K" crossorigin="anonymous">
+                    <!-- Різдвяна текстура пергаменту -->
+                    <img id="parchment-texture" src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIgdmlld0JveD0iMCAwIDUxMiA1MTIiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSI1MTIiIGhlaWdodD0iNTEyIiByeD0iMjAiIGZpbGw9IiNmZmY5ZTMiLz4KPHJlY3QgeD0iMTAiIHk9IjEwIiB3aWR0aD0iNDkyIiBoZWlnaHQ9IjQ5MiIgcng9IjE1IiBzdHJva2U9IiNkMzU0MDAiIHN0cm9rZS13aWR0aD0iOCIvPgo8dGV4dCB4PSIyNTYiIHk9IjYwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LWZhbWlseT0iR2VvcmdpYSIgZm9udC1zaXplPSIzMiIgZmlsbD0iI2U3M2UxZSI+0J7RgtC/0YDQsNCy0LvQtdC90L4g0J3QsNGB0YLRgNC+0LnQutC4PC90ZXh0Pgo8bGluZSB4MT0iODAiIHkxPSI4MCIgeDI9IjQzMiIgeTI9IjgwIiBzdHJva2U9IiNkMzU0MDAiIHN0cm9rZS13aWR0aD0iNCIvPgo8Y2lyY2xlIGN4PSIxMjAiIGN5PSIxMjAiIHI9IjgiIGZpbGw9IiMyZWNjNzEiLz4KPGNpcmNsZSBjeD0iMzkyIiBjeT0iMTIwIiByPSI4IiBmaWxsPSIjZWM0YzNjIi8+CjxjaXJjbGUgY3g9IjE1MCIgY3k9IjQwMCIgcj0iNiIgZmlsbD0iIzM0OThkYiIvPgo8Y2lyY2xlIGN4PSIzNjAiIGN5PSI0MDAiIHI9IjYiIGZpbGw9IiM5YjU5YjYiLz4KPC9zdmc+Cg==" crossorigin="anonymous">
                 </a-assets>
 
                 <!-- Камера -->
@@ -225,7 +394,7 @@
                     cursor="fuse: false; rayOrigin: mouse;"
                 ></a-camera>
 
-                <!-- AR Ціль - пергамент -->
+                <!-- AR Ціль - різдвяний пергамент -->
                 <a-entity mindar-image-target="targetIndex: 0">
                     <!-- Основа пергаменту -->
                     <a-plane 
@@ -250,20 +419,20 @@
         </div>
 
         <div id="ui">
-            <div id="status">🔍 Шукаємо маркер...</div>
-            <div>
-                <button id="clearBtn" class="control-btn">🧹 Очистити</button>
+            <div id="status">🎄 Шукаємо різдвяний маркер...</div>
+            <div style="display: flex;">
+                <button id="clearBtn" class="control-btn">✨ Очистити</button>
                 <button id="screenshotBtn" class="control-btn">📸 Знімок</button>
                 <button id="markerBtn" class="control-btn">🎯 Маркер</button>
             </div>
         </div>
 
         <div id="instructions">
-            <h3>✍️ Як писати лист подяки:</h3>
+            <h3>✍️ Створіть Різдвяне Побажання!</h3>
             <p>1. Наведіть камеру на маркер</p>
-            <p>2. Покажіть вказівний палець</p>
-            <p>3. Витягніть палець, щоб писати в повітрі</p>
-            <p>4. Зігніть палець, щоб закінчити напис</p>
+            <p>2. Покажіть вказівний палець 🖐️</p>
+            <p>3. Витягніть палець, щоб писати у повітрі</p>
+            <p>4. Рухайте пальцем для створення напису ✨</p>
         </div>
     </div>
 
@@ -279,11 +448,32 @@
         let camera;
         let videoElement;
 
+        // === СТВОРЕННЯ СНІЖИНОК ===
+        function createSnowflakes() {
+            const container = document.getElementById('snowflakes-container');
+            const snowflakes = ['❄', '❅', '❆', '★', '☆', '✶'];
+            
+            for (let i = 0; i < 15; i++) {
+                const snowflake = document.createElement('div');
+                snowflake.className = 'snowflake';
+                snowflake.innerHTML = snowflakes[Math.floor(Math.random() * snowflakes.length)];
+                snowflake.style.left = Math.random() * 100 + 'vw';
+                snowflake.style.animationDelay = Math.random() * 10 + 's';
+                snowflake.style.animationDuration = (Math.random() * 5 + 5) + 's';
+                snowflake.style.fontSize = (Math.random() * 10 + 15) + 'px';
+                snowflake.style.opacity = Math.random() * 0.7 + 0.3;
+                container.appendChild(snowflake);
+            }
+        }
+
         // === ІНІЦІАЛІЗАЦІЯ ===
         document.addEventListener('DOMContentLoaded', function() {
             sceneEl = document.querySelector('a-scene');
             drawingSurface = document.querySelector('#drawing-surface');
             videoElement = document.querySelector('#video-overlay');
+            
+            // Створюємо сніжинки
+            createSnowflakes();
             
             // Очікуємо завантаження сцени
             sceneEl.addEventListener('loaded', function() {
@@ -295,16 +485,16 @@
             
             // Слухаємо події MindAR
             sceneEl.addEventListener('mindar-target-found', function(event) {
-                console.log('🎯 Маркер знайдено!', event.detail);
+                console.log('🎯 Маркер знайдено!');
                 isMarkerVisible = true;
                 document.getElementById('status').textContent = '✅ Маркер знайдено! Покажіть палець ✋';
                 document.getElementById('status').classList.add('success');
             });
             
             sceneEl.addEventListener('mindar-target-lost', function(event) {
-                console.log('❌ Маркер втрачено', event.detail);
+                console.log('❌ Маркер втрачено');
                 isMarkerVisible = false;
-                document.getElementById('status').textContent = '🔍 Шукаємо маркер...';
+                document.getElementById('status').textContent = '🎄 Шукаємо різдвяний маркер...';
                 document.getElementById('status').classList.remove('success');
                 stopDrawing();
             });
@@ -343,7 +533,7 @@
 
             hands.onResults(onHandResults);
 
-            // Запуск камери для MediaPipe
+            // Запуск камери для MediaPipe - ВИКОРИСТОВУЄМО ТІЛЬКИ ЗАДНЮ КАМЕРУ
             camera = new Camera(videoElement, {
                 onFrame: async () => {
                     if (hands) {
@@ -354,11 +544,48 @@
                 height: 480
             });
             
-            camera.start().then(() => {
-                console.log('📷 Камера запущена для MediaPipe');
-            }).catch(error => {
-                console.error('❌ Помилка камери:', error);
-            });
+            // Запускаємо камеру з заднім видом
+            startBackCamera();
+        }
+
+        // === ЗАПУСК ЗАДНЬОЇ КАМЕРИ ===
+        async function startBackCamera() {
+            try {
+                // Спочатку пробуємо точну задню камеру
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    video: {
+                        facingMode: { exact: "environment" },
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 }
+                    }
+                });
+                
+                videoElement.srcObject = stream;
+                await camera.start();
+                console.log('📷 Задня камера успішно запущена!');
+                
+            } catch (error) {
+                console.log('🔄 Не вдалося запустити точну задню камеру, пробуємо звичайну...');
+                
+                try {
+                    // Якщо не вийшло, пробуємо будь-яку камеру з пріоритетом на задню
+                    const stream = await navigator.mediaDevices.getUserMedia({
+                        video: {
+                            facingMode: "environment",
+                            width: { ideal: 1280 },
+                            height: { ideal: 720 }
+                        }
+                    });
+                    
+                    videoElement.srcObject = stream;
+                    await camera.start();
+                    console.log('📷 Камера запущена (можливо передня)');
+                    
+                } catch (fallbackError) {
+                    console.error('❌ Не вдалося запустити камеру:', fallbackError);
+                    document.getElementById('status').textContent = '❌ Помилка камери. Перезавантажте сторінку.';
+                }
+            }
         }
 
         // === ОБРОБКА РЕЗУЛЬТАТІВ ВІДСТЕЖЕННЯ РУК ===
@@ -376,8 +603,8 @@
                 // Відображення індикатора пальця
                 const x = indexFingerTip.x * window.innerWidth;
                 const y = indexFingerTip.y * window.innerHeight;
-                fingerIndicator.style.left = (x - 15) + 'px';
-                fingerIndicator.style.top = (y - 15) + 'px';
+                fingerIndicator.style.left = (x - 12) + 'px';
+                fingerIndicator.style.top = (y - 12) + 'px';
                 fingerIndicator.style.display = 'block';
                 
                 // Визначення стану пальця (витягнутий/зігнутий)
@@ -407,48 +634,32 @@
 
         // === ПЕРЕВІРКА ЧИ ПАЛЕЦЬ ВИТЯГНУТИЙ ===
         function checkFingerExtended(landmarks) {
-            // Вказівний палець
             const tip = landmarks[8];  // Кінчик
-            const dip = landmarks[7];  // Другий суглоб
             const pip = landmarks[6];  // Середній суглоб
             const mcp = landmarks[5];  // Основа
             
-            // Обчислюємо відстані між суглобами
-            const tipToDip = calculateDistance(tip, dip);
-            const dipToPip = calculateDistance(dip, pip);
-            const pipToMcp = calculateDistance(pip, mcp);
-            
-            // Палець вважається витягнутим, якщо відстань tip-mcp велика
-            const tipToMcp = calculateDistance(tip, mcp);
-            const referenceDistance = calculateDistance(landmarks[0], landmarks[5]); // Зап'ястя до основи
-            
-            // Відношення для визначення витягнутого стану
-            const extensionRatio = tipToMcp / referenceDistance;
-            
-            return extensionRatio > 0.3; // Емпіричне значення
-        }
-
-        function calculateDistance(point1, point2) {
-            return Math.sqrt(
-                Math.pow(point1.x - point2.x, 2) + 
-                Math.pow(point1.y - point2.y, 2) +
-                Math.pow(point1.z - point2.z, 2)
+            const tipToPip = Math.sqrt(
+                Math.pow(tip.x - pip.x, 2) + 
+                Math.pow(tip.y - pip.y, 2)
             );
+            
+            const pipToMcp = Math.sqrt(
+                Math.pow(pip.x - mcp.x, 2) + 
+                Math.pow(pip.y - mcp.y, 2)
+            );
+            
+            return tipToPip > pipToMcp * 0.8;
         }
 
         // === КОНВЕРТАЦІЯ КООРДИНАТ У 3D-ПРОСТІР AR ===
         function convertToARPosition(landmark) {
-            // Масштабування координат для AR-сцени
-            // Це спрощена конвертація - у реальному додатку потрібно враховувати
-            // позицію маркера та перспективу камери
-            
-            const scale = 2.5; // Масштабний коефіцієнт
-            const offsetX = 0; // Зсув по X
-            const offsetY = 0.5; // Зсув по Y (підняти вище)
+            const scale = 2.0;
+            const offsetX = 0;
+            const offsetY = 0.3;
             
             const x = (landmark.x - 0.5) * scale + offsetX;
-            const y = -(landmark.y - 0.5) * scale + offsetY; // Інвертуємо Y
-            const z = -landmark.z * 0.5; // Глибина
+            const y = -(landmark.y - 0.5) * scale + offsetY;
+            const z = -landmark.z * 0.3;
             
             return {x: x, y: y, z: z};
         }
@@ -460,25 +671,22 @@
             isDrawing = true;
             currentPoints = [position];
             
-            console.log('✍️ Початок малювання:', position);
-            
             // Створюємо нову лінію
             currentLine = document.createElement('a-entity');
             currentLine.setAttribute('line', {
                 points: formatPoints(currentPoints),
-                color: '#5D2A00',
-                linewidth: 10
+                color: getRandomChristmasColor(),
+                linewidth: 8
             });
             
             drawingSurface.appendChild(currentLine);
-            document.getElementById('status').textContent = '✍️ Пишемо...';
+            document.getElementById('status').textContent = '✍️ Пишемо різдвяне побажання...';
             document.getElementById('status').classList.add('pulse');
         }
 
         function addPointToDrawing(position) {
             if (!isDrawing || !currentLine || !isMarkerVisible) return;
             
-            // Додаємо нову точку, якщо вона достатньо далеко від попередньої
             if (currentPoints.length > 0) {
                 const lastPoint = currentPoints[currentPoints.length - 1];
                 const distance = Math.sqrt(
@@ -487,21 +695,19 @@
                     Math.pow(position.z - lastPoint.z, 2)
                 );
                 
-                if (distance < 0.02) return; // Занадто близько - пропускаємо
+                if (distance < 0.01) return;
             }
             
             currentPoints.push(position);
             
-            // Обмежуємо кількість точок для продуктивності
-            if (currentPoints.length > 100) {
+            if (currentPoints.length > 80) {
                 currentPoints.shift();
             }
             
-            // Оновлюємо лінію
             currentLine.setAttribute('line', {
                 points: formatPoints(currentPoints),
-                color: '#5D2A00',
-                linewidth: 10
+                color: getRandomChristmasColor(),
+                linewidth: 8
             });
         }
 
@@ -512,16 +718,19 @@
             currentLine = null;
             currentPoints = [];
             
-            console.log('⏹️ Зупинка малювання');
-            
-            document.getElementById('status').textContent = '✅ Напис додано! Пишіть ще';
+            document.getElementById('status').textContent = '✅ Побажання додано! Створіть ще ✨';
             document.getElementById('status').classList.remove('pulse');
             
             setTimeout(() => {
                 if (isMarkerVisible) {
                     document.getElementById('status').textContent = '✅ Маркер знайдено! Покажіть палець ✋';
                 }
-            }, 2000);
+            }, 3000);
+        }
+
+        function getRandomChristmasColor() {
+            const colors = ['#e74c3c', '#2ecc71', '#3498db', '#9b59b6', '#e67e22', '#f1c40f'];
+            return colors[Math.floor(Math.random() * colors.length)];
         }
 
         function formatPoints(points) {
@@ -530,25 +739,17 @@
 
         // === ОБРОБНИКИ ПОДІЙ ===
         function setupEventListeners() {
-            // Кнопка очищення
             document.getElementById('clearBtn').addEventListener('click', clearDrawing);
-            
-            // Кнопка знімка
             document.getElementById('screenshotBtn').addEventListener('click', takeScreenshot);
-            
-            // Кнопка маркера
             document.getElementById('markerBtn').addEventListener('click', showMarkerInfo);
         }
 
         // === ОЧИЩЕННЯ ===
         function clearDrawing() {
-            // Видаляємо всі намальовані лінії
             const lines = drawingSurface.querySelectorAll('[line]');
             lines.forEach(line => drawingSurface.removeChild(line));
             
-            console.log('🧹 Очищено всі малюнки');
-            
-            document.getElementById('status').textContent = '🧹 Все очищено!';
+            document.getElementById('status').textContent = '✨ Всі побажання очищено!';
             document.getElementById('status').classList.add('success');
             
             setTimeout(() => {
@@ -562,17 +763,13 @@
         // === ЗНІМОК ЕКРАНУ ===
         function takeScreenshot() {
             if (!isMarkerVisible) {
-                alert('Спочатку знайдіть маркер!');
+                alert('🎄 Спочатку знайдіть різдвяний маркер!');
                 return;
             }
             
             try {
-                // Використовуємо A-Frame's screenshot функцію
                 sceneEl.components.screenshot.capture('perspective');
-                
-                console.log('📸 Знімок зроблено');
-                
-                document.getElementById('status').textContent = '📸 Знімок збережено!';
+                document.getElementById('status').textContent = '📸 Різдвяний знімок збережено!';
                 document.getElementById('status').classList.add('success');
                 
                 setTimeout(() => {
@@ -580,10 +777,9 @@
                         document.getElementById('status').textContent = '✅ Маркер знайдено! Покажіть палець ✋';
                         document.getElementById('status').classList.remove('success');
                     }
-                }, 2000);
+                }, 3000);
             } catch (error) {
-                console.error('❌ Помилка знімка:', error);
-                alert('Помилка при знімку екрана');
+                alert('❌ Помилка при знімку екрана');
             }
         }
 
@@ -596,55 +792,26 @@
             document.getElementById('marker-info').style.display = 'none';
         }
 
-        // === ДЕМО-ФУНКЦІОНАЛ ДЛЯ ТЕСТУВАННЯ ===
-        function setupDemoDrawing() {
-            console.log('🎮 Демо-режим малювання активовано');
+        // === АДАПТИВНІСТЬ ДЛЯ МОБІЛЬНИХ ПРИСТРОЇВ ===
+        function handleResize() {
+            const ui = document.getElementById('ui');
+            const instructions = document.getElementById('instructions');
             
-            // Додаємо можливість малювання мишею для тестування
-            sceneEl.addEventListener('mousedown', function(e) {
-                if (!isMarkerVisible) return;
-                
-                const cameraEl = document.querySelector('a-camera');
-                const raycaster = cameraEl.components.raycaster;
-                raycaster.refreshObjects();
-                const intersections = raycaster.intersectObjects(raycaster.objects, false);
-                
-                if (intersections.length > 0) {
-                    const intersection = intersections[0];
-                    if (intersection.object.el.classList.contains('drawable')) {
-                        const point = intersection.point;
-                        if (!isDrawing) {
-                            startDrawing(point);
-                        }
-                    }
-                }
-            });
-
-            sceneEl.addEventListener('mousemove', function(e) {
-                if (!isDrawing || !isMarkerVisible) return;
-                
-                const cameraEl = document.querySelector('a-camera');
-                const raycaster = cameraEl.components.raycaster;
-                raycaster.refreshObjects();
-                const intersections = raycaster.intersectObjects(raycaster.objects, false);
-                
-                if (intersections.length > 0) {
-                    const intersection = intersections[0];
-                    if (intersection.object.el.classList.contains('drawable')) {
-                        addPointToDrawing(intersection.point);
-                    }
-                }
-            });
-
-            sceneEl.addEventListener('mouseup', function() {
-                if (isDrawing) {
-                    stopDrawing();
-                }
-            });
+            if (window.innerWidth < 480) {
+                ui.style.flexDirection = 'column';
+                ui.style.gap = '8px';
+            } else {
+                ui.style.flexDirection = 'row';
+            }
+            
+            if (window.innerHeight < 600) {
+                instructions.style.bottom = '5px';
+                instructions.style.padding = '8px 12px';
+            }
         }
 
-        // Запускаємо демо-режим
-        setTimeout(setupDemoDrawing, 3000);
+        window.addEventListener('resize', handleResize);
+        handleResize();
     </script>
 </body>
 </html>
