@@ -1,572 +1,865 @@
 <!DOCTYPE html>
-<html lang="uk">
+<html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-  <title>🎅 Різдвяний AR-лист — дитяча версія</title>
-
-  <!-- Дружній шрифт -->
-  <link href="https://fonts.googleapis.com/css2?family=Patrick+Hand&family=Nunito:wght@400;700&display=swap" rel="stylesheet">
-
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>🎅 Christmas Magic AR</title>
   <style>
-    *{box-sizing:border-box}
-    html,body{height:100%;margin:0;font-family:"Nunito", "Patrick Hand", system-ui, sans-serif;background:linear-gradient(135deg,#ffe6f2,#e6f7ff);color:#222;overflow:hidden}
-    #container{position:relative;width:100vw;height:100vh}
-    canvas{display:block;width:100%;height:100%}
-    #video{display:none}
-    /* UI */
-    #ui{
-      position:absolute;left:12px;right:12px;top:12px;z-index:120;display:flex;gap:12px;align-items:center;justify-content:space-between;
-      background:linear-gradient(180deg, rgba(255,255,255,0.9), rgba(255,255,255,0.85));
-      border-radius:18px;padding:12px;border:2px solid rgba(255,193,7,0.18);box-shadow:0 8px 30px rgba(0,0,0,0.12)
+    * { 
+      margin: 0; 
+      padding: 0; 
+      box-sizing: border-box; 
     }
-    #status{font-weight:700;font-size:18px;color:#b71c1c; display:flex; align-items:center; gap:8px;}
-    .controls{display:flex;gap:8px;align-items:center}
-    .big-btn{
-      border:none;padding:12px 18px;border-radius:14px;font-weight:700;font-size:16px;cursor:pointer;
-      display:inline-flex;gap:8px;align-items:center;justify-content:center;
-      box-shadow:0 8px 20px rgba(0,0,0,0.12);
-      user-select:none;
+    
+    body { 
+      overflow: hidden; 
+      font-family: 'Comic Sans MS', cursive, sans-serif;
+      background: linear-gradient(135deg, #1a237e, #0d47a1);
+      color: white;
     }
-    .btn-primary{background:linear-gradient(135deg,#ff6f61,#ff3b30);color:white}
-    .btn-clear{background:linear-gradient(135deg,#42a5f5,#1976d2);color:white}
-    .btn-camera{background:linear-gradient(135deg,#7b1fa2,#9c27b0);color:white}
-    .btn-lang{background:linear-gradient(135deg,#43a047,#66bb6a);color:white}
-    .btn-record.recording{animation:recordPulse 1.5s infinite}
-    @keyframes recordPulse{
-      0%{box-shadow:0 0 0 0 rgba(244,67,54,0.4)}
-      70%{box-shadow:0 0 0 12px rgba(244,67,54,0)}
-      100%{box-shadow:0 0 0 0 rgba(244,67,54,0)}
+    
+    #container { 
+      position: relative; 
+      width: 100vw; 
+      height: 100vh; 
     }
-    #instructions{
-      position:absolute;left:50%;transform:translateX(-50%);bottom:18px;z-index:110;
-      background:linear-gradient(180deg,rgba(255,255,255,0.95),rgba(255,255,255,0.9));padding:12px 18px;border-radius:14px;border:1px solid rgba(0,0,0,0.06);
-      font-size:15px;max-width:94%;text-align:center;box-shadow:0 8px 30px rgba(0,0,0,0.08)
+    
+    canvas { 
+      display: block; 
+      width: 100%;
+      height: 100%;
+    }
+    
+    /* ДИТЯЧИЙ UI */
+    #ui {
+      position: absolute; 
+      top: 15px; 
+      left: 15px; 
+      right: 15px;
+      display: flex; 
+      justify-content: space-between; 
+      align-items: center;
+      z-index: 100;
+      font-size: 16px;
+      background: rgba(255, 255, 255, 0.15);
+      padding: 15px 20px;
+      border-radius: 20px;
+      backdrop-filter: blur(15px);
+      border: 2px solid rgba(255, 215, 0, 0.5);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    }
+    
+    .kid-button {
+      background: linear-gradient(135deg, #FF6B6B, #FF8E53);
+      color: white; 
+      border: none;
+      padding: 14px 22px; 
+      border-radius: 50px; 
+      font-weight: bold;
+      font-family: 'Comic Sans MS', cursive;
+      box-shadow: 0 6px 20px rgba(255, 107, 107, 0.5);
+      cursor: pointer;
+      transition: all 0.3s ease;
+      margin-left: 8px;
+      font-size: 15px;
+      border: 2px solid rgba(255, 255, 255, 0.4);
+    }
+    
+    .kid-button:hover {
+      transform: translateY(-3px) scale(1.05);
+      box-shadow: 0 10px 25px rgba(255, 107, 107, 0.7);
+    }
+    
+    .kid-button:active {
+      transform: translateY(1px) scale(0.98);
+    }
+    
+    #status { 
+      color: #FFD700; 
+      font-size: 17px;
+      text-shadow: 0 2px 8px rgba(0,0,0,0.6);
+      font-weight: bold;
+      background: rgba(0, 0, 0, 0.3);
+      padding: 10px 18px;
+      border-radius: 25px;
+      border: 2px solid rgba(255, 215, 0, 0.4);
+    }
+    
+    #controls {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    
+    #clearBtn {
+      background: linear-gradient(135deg, #4ECDC4, #00BFA5);
+      box-shadow: 0 6px 20px rgba(78, 205, 196, 0.5);
+    }
+    
+    #langBtn {
+      background: linear-gradient(135deg, #FFD93D, #FF9A3D);
+      padding: 12px 18px;
+      box-shadow: 0 6px 20px rgba(255, 217, 61, 0.5);
+    }
+    
+    #cameraBtn {
+      background: linear-gradient(135deg, #6A11CB, #2575FC);
+      padding: 12px 18px;
+      box-shadow: 0 6px 20px rgba(106, 17, 203, 0.5);
+    }
+    
+    #recordBtn {
+      background: linear-gradient(135deg, #FF416C, #FF4B2B);
+      box-shadow: 0 6px 20px rgba(255, 65, 108, 0.5);
+    }
+    
+    /* ІНСТРУКЦІЇ ДЛЯ ДІТЕЙ */
+    #instructions {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      text-align: center;
+      background: rgba(255, 255, 255, 0.15);
+      padding: 20px 30px;
+      border-radius: 25px;
+      backdrop-filter: blur(20px);
+      border: 2px solid rgba(255, 215, 0, 0.5);
+      max-width: 95%;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+      animation: float 3s ease-in-out infinite;
+    }
+    
+    @keyframes float {
+      0%, 100% { transform: translateX(-50%) translateY(0px); }
+      50% { transform: translateX(-50%) translateY(-10px); }
+    }
+    
+    #instructions h3 {
+      margin-bottom: 12px;
+      color: #FFD700;
+      font-size: 22px;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+    }
+    
+    #instructions p {
+      margin-bottom: 8px;
+      font-size: 16px;
+      color: #E3F2FD;
+      font-weight: 600;
+    }
+    
+    .pulse {
+      animation: pulse 1.5s infinite;
+    }
+    
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+      100% { transform: scale(1); }
+    }
+    
+    .success {
+      color: #00E676 !important;
+      text-shadow: 0 0 10px rgba(0, 230, 118, 0.5);
+    }
+    
+    .recording {
+      background: linear-gradient(135deg, #FF5252, #FF1744) !important;
+      animation: recordingGlow 1s infinite alternate;
+    }
+    
+    @keyframes recordingGlow {
+      from { box-shadow: 0 0 20px rgba(255, 82, 82, 0.6); }
+      to { box-shadow: 0 0 30px rgba(255, 23, 68, 0.8); }
     }
 
-    /* Snow UI overlay for kids (2D snow) */
-    #snowflakes{position:absolute;inset:0;pointer-events:none;z-index:2}
-    .snow{position:absolute;font-size:18px;opacity:0.95;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.2))}
+    /* АНІМОВАНІ СНІЖИНКИ */
+    .snowflake {
+      position: absolute;
+      color: white;
+      font-size: 24px;
+      user-select: none;
+      pointer-events: none;
+      z-index: 1;
+      text-shadow: 0 0 8px rgba(255, 255, 255, 0.8);
+      animation: snowFall linear infinite;
+    }
+    
+    @keyframes snowFall {
+      0% { 
+        transform: translateY(-100px) rotate(0deg) scale(0.5); 
+        opacity: 0; 
+      }
+      10% { 
+        opacity: 1; 
+      }
+      90% { 
+        opacity: 1; 
+      }
+      100% { 
+        transform: translateY(100vh) rotate(360deg) scale(1); 
+        opacity: 0; 
+      }
+    }
 
-    /* Tiny hint */
-    #helpBubble{position:absolute;left:12px;bottom:120px;background:rgba(255,255,255,0.98);padding:10px 12px;border-radius:12px;border:1px solid rgba(0,0,0,0.05);box-shadow:0 6px 18px rgba(0,0,0,0.08);z-index:115;font-size:14px}
-    #cameraList{display:none;position:absolute;top:64px;right:12px;background:white;border-radius:10px;padding:8px;border:1px solid rgba(0,0,0,0.06);z-index:130;box-shadow:0 8px 30px rgba(0,0,0,0.12)}
-    #cameraList button {display:block;width:240px;text-align:left;padding:8px;border-radius:8px;background:transparent;border:none;cursor:pointer}
+    /* LOADING ЕКРАН */
+    #loading {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, #1a237e, #0d47a1);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      transition: opacity 1s ease;
+    }
+    
+    .loader {
+      width: 60px;
+      height: 60px;
+      border: 5px solid rgba(255, 255, 255, 0.3);
+      border-top: 5px solid #FFD700;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-bottom: 20px;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
+    #loadingText {
+      color: #FFD700;
+      font-size: 20px;
+      font-weight: bold;
+      text-align: center;
+    }
+
+    /* КОНФЕТТІ ЕФЕКТ */
+    .confetti {
+      position: absolute;
+      width: 12px;
+      height: 12px;
+      background: #FFD700;
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 100;
+      animation: confettiFall 2s ease-out forwards;
+    }
+    
+    @keyframes confettiFall {
+      0% { 
+        transform: translate(0, 0) rotate(0deg) scale(1);
+        opacity: 1;
+      }
+      100% { 
+        transform: translate(var(--tx), 200px) rotate(360deg) scale(0);
+        opacity: 0;
+      }
+    }
   </style>
 </head>
 <body>
+  <!-- LOADING ЕКРАН -->
+  <div id="loading">
+    <div class="loader"></div>
+    <div id="loadingText">🎄 Starting Christmas Magic... ✨</div>
+  </div>
+
   <div id="container">
-    <video id="video" playsinline></video>
+    <video id="video" playsinline style="display:none;"></video>
     <canvas id="canvas"></canvas>
 
+    <!-- Сніжинки -->
     <div id="snowflakes"></div>
 
-    <div id="ui" role="region" aria-label="controls">
-      <div id="status">🎅 Наведи палець, щоб писати...</div>
+    <!-- Конфетті -->
+    <div id="confettiContainer"></div>
 
-      <div class="controls" aria-hidden="false">
-        <button id="langBtn" class="big-btn btn-lang" title="Змінити мову">🇺🇦 UA</button>
-        <button id="cameraBtn" class="big-btn btn-camera" title="Перемикати камеру">📷 Камера</button>
-        <button id="clearBtn" class="big-btn btn-clear" title="Очистити лист">✨ Очистити</button>
-        <button id="recordBtn" class="big-btn btn-primary" title="Записати відео">🎥 Запис</button>
+    <div id="ui">
+      <div id="status">🎅 Show your finger to write!</div>
+      <div id="controls">
+        <button id="langBtn" class="kid-button">🇺🇦 UA</button>
+        <button id="cameraBtn" class="kid-button">📷 Back Camera</button>
+        <button id="clearBtn" class="kid-button">✨ Clear</button>
+        <button id="recordBtn" class="kid-button">🎥 Record</button>
       </div>
     </div>
-
-    <div id="cameraList" aria-hidden="true"></div>
-
+    
     <div id="instructions">
-      <strong>🎄 Чарівний Різдвяний Лист</strong>
-      <div style="margin-top:8px">1. Покажи вказівний палець камері — почнеться слід ✨<br>2. Витягни палець щоб писати, зігни — щоб закінчити</div>
+      <h3>🎄 Magical Christmas Writing 🎄</h3>
+      <p>👆 Show your finger to the camera</p>
+      <p>✍️ Point to write in the air</p>
+      <p>🎨 Create your Christmas wish!</p>
     </div>
-
-    <div id="helpBubble">Підказка: натисни "Камера" — перемикає фізичні камери</div>
   </div>
 
   <!-- Three.js -->
   <script src="https://cdn.jsdelivr.net/npm/three@0.157.0/build/three.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.157.0/examples/js/controls/OrbitControls.js"></script>
 
   <!-- MediaPipe Hands -->
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
 
   <script>
-    // Реклама (делікатно)
-    console.log("Пробуйте інші AR/AI інструменти на https://gptonline.ai/");
-
-    // --- Переклади (укр/англ) ---
+    // ДИТЯЧІ ПЕРЕКЛАДИ
     const translations = {
       en: {
-        title: '🎅 Christmas AR Letter',
+        title: '🎅 Christmas Magic AR',
         status: {
-          initial: '🎅 Point your finger to write...',
-          drawing: '✍️ Writing magical letter...',
-          done: '✨ Nice! Write more...',
-          clear: '🌟 Letter cleared!',
-          recording: '🔴 Recording...',
-          saved: '💫 Video saved!'
+          initial: '🎅 Show your finger to write!',
+          drawing: '✍️ Writing magic letter...',
+          done: '✨ Amazing! Write more!',
+          clear: '🌟 Clean slate!',
+          recording: '🔴 Recording magic...',
+          saved: '💫 Video saved!',
+          cameraBack: '📷 Back Camera',
+          cameraFront: '📷 Front Camera'
         },
-        buttons: { clear: '✨ Clear', record: '🎥 Record', stop: '⏹ Stop', lang: '🇺🇦 UA', camera: '📷 Switch' },
-        header: '🎅 Letter to Santa'
+        instructions: {
+          title: '🎄 Magical Christmas Writing 🎄',
+          step1: '👆 Show your finger to the camera',
+          step2: '✍️ Point to write in the air',
+          step3: '🎨 Create your Christmas wish!'
+        },
+        buttons: {
+          clear: '✨ Clear',
+          record: '🎥 Record',
+          stop: '⏹ Stop',
+          lang: '🇺🇦 UA',
+          camera: '📷 Switch'
+        },
+        header: '🎅 My Christmas Wish'
       },
       uk: {
-        title: '🎅 Різдвяний AR-лист',
+        title: '🎅 Різдвяна Магія AR',
         status: {
-          initial: '🎅 Наведи палець, щоб писати...',
+          initial: '🎅 Покажи пальчик!',
           drawing: '✍️ Пишу чарівний лист...',
-          done: '✨ Чудово! Пиши ще...',
-          clear: '🌟 Лист очищено!',
-          recording: '🔴 Запис...',
-          saved: '💫 Відео збережено!'
+          done: '✨ Чудово! Пиши ще!',
+          clear: '🌟 Все чисто!',
+          recording: '🔴 Записую магію...',
+          saved: '💫 Відео збережено!',
+          cameraBack: '📷 Задня камера',
+          cameraFront: '📷 Передня камера'
         },
-        buttons: { clear: '✨ Очистити', record: '🎥 Запис', stop: '⏹ Стоп', lang: '🇺🇸 EN', camera: '📷 Камера' },
-        header: '🎅 Лист до Санти'
+        instructions: {
+          title: '🎄 Чарівне Різдвяне Письмо 🎄',
+          step1: '👆 Покажи пальчик камері',
+          step2: '✍️ Вкажи щоб писати',
+          step3: '🎨 Створи різдвяне бажання!'
+        },
+        buttons: {
+          clear: '✨ Очистити',
+          record: '🎥 Запис',
+          stop: '⏹ Стоп',
+          lang: '🇺🇸 EN',
+          camera: '📷 Камера'
+        },
+        header: '🎅 Моє Різдвяне Бажання'
       }
     };
-    let currentLang = 'uk';
 
-    // --- Глобальні змінні ---
-    let scene, renderer, camera3;
-    let letterMesh, textGroup, fingerTrail = [];
-    let isDrawing = false, currentPath = [];
-    let hands, cameraProcessor, videoEl, canvasEl;
-    let mediaRecorder, recordedChunks = [], isRecording = false;
-
-    // Камери
-    let devices = [];
-    let currentDeviceIndex = 0;
+    let currentLang = 'en';
+    let camera, scene, renderer, letter, textGroup;
+    let hands;
+    let isDrawing = false;
+    let currentPath = [];
+    let recordedChunks = [];
+    let mediaRecorder;
+    let isRecording = false;
+    let fingerTrail = [];
+    let videoElement;
+    let currentCamera = 'environment'; // ГАРАНТОВАНО ЗАДНЯ КАМЕРА
     let cameraStream = null;
 
-    // UI елементи
-    const statusEl = document.getElementById('status');
+    // === ЕЛЕМЕНТИ ===
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('canvas');
+    const status = document.getElementById('status');
     const recordBtn = document.getElementById('recordBtn');
     const clearBtn = document.getElementById('clearBtn');
     const langBtn = document.getElementById('langBtn');
     const cameraBtn = document.getElementById('cameraBtn');
-    const cameraListEl = document.getElementById('cameraList');
+    const loadingScreen = document.getElementById('loading');
+    const loadingText = document.getElementById('loadingText');
 
-    // Ініціалізація звуку через WebAudio (короткі тональні ефекти)
-    const AudioCtx = window.AudioContext || window.webkitAudioContext;
-    const audioCtx = AudioCtx ? new AudioCtx() : null;
-    function playTone(freq=660, duration=0.08) {
-      if (!audioCtx) return;
-      const o = audioCtx.createOscillator();
-      const g = audioCtx.createGain();
-      o.type = 'sine'; o.frequency.value = freq;
-      g.gain.value = 0.0001;
-      o.connect(g); g.connect(audioCtx.destination);
-      const now = audioCtx.currentTime;
-      g.gain.exponentialRampToValueAtTime(0.12, now + 0.005);
-      o.start(now);
-      g.gain.exponentialRampToValueAtTime(0.0001, now + duration);
-      o.stop(now + duration + 0.02);
-    }
-
-    // --- Snow (2D) for kids ---
-    function createSnowUI() {
-      const container = document.getElementById('snowflakes');
-      for (let i=0;i<24;i++){
-        const s = document.createElement('div');
-        s.className = 'snow';
-        s.textContent = '❄';
-        const left = Math.random()*100;
-        s.style.left = left+'vw';
-        s.style.top = -Math.random()*20 + 'vh';
-        const dur = (Math.random()*6+4).toFixed(1);
-        s.style.animation = `fall${i} ${dur}s linear infinite`;
-        s.style.opacity = 0.8 + Math.random()*0.2;
-        container.appendChild(s);
-
-        // create keyframes dynamically
-        const style = document.createElement('style');
-        style.textContent = `
-          @keyframes fall${i} {
-            0% { transform: translateY(-10vh) rotate(0deg); opacity:0 }
-            10% { opacity:1 }
-            100% { transform: translateY(120vh) rotate(360deg); opacity:0.9 }
-          }`;
-        document.head.appendChild(style);
+    // === КОНФЕТТІ ЕФЕКТ ===
+    function createConfetti() {
+      const container = document.getElementById('confettiContainer');
+      const colors = ['#FF6B6B', '#4ECDC4', '#FFD93D', '#6B48FF', '#FF8E53'];
+      
+      for (let i = 0; i < 20; i++) {
+        const confetti = document.createElement('div');
+        confetti.className = 'confetti';
+        confetti.style.left = Math.random() * 100 + 'vw';
+        confetti.style.top = '-20px';
+        confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+        confetti.style.setProperty('--tx', (Math.random() * 200 - 100) + 'px');
+        
+        container.appendChild(confetti);
+        
+        setTimeout(() => {
+          if (confetti.parentNode) {
+            confetti.parentNode.removeChild(confetti);
+          }
+        }, 2000);
       }
     }
 
-    // --- THREE init ---
+    // === СНІЖИНКИ ===
+    function createSnowflakes() {
+      const snowContainer = document.getElementById('snowflakes');
+      const snowflakes = ['❄', '❅', '❆', '★', '☆'];
+      
+      for (let i = 0; i < 20; i++) {
+        const snowflake = document.createElement('div');
+        snowflake.className = 'snowflake';
+        snowflake.innerHTML = snowflakes[Math.floor(Math.random() * snowflakes.length)];
+        snowflake.style.left = Math.random() * 100 + 'vw';
+        snowflake.style.animationDelay = Math.random() * 10 + 's';
+        snowflake.style.animationDuration = (Math.random() * 5 + 5) + 's';
+        snowflake.style.fontSize = (Math.random() * 10 + 20) + 'px';
+        snowflake.style.opacity = Math.random() * 0.7 + 0.3;
+        snowContainer.appendChild(snowflake);
+      }
+    }
+
+    // === Three.js ===
     function initThree() {
-      const canvas = document.getElementById('canvas');
-      renderer = new THREE.WebGLRenderer({ canvas, antialias:true, alpha:true, preserveDrawingBuffer:true });
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-      renderer.setSize(window.innerWidth, window.innerHeight);
       scene = new THREE.Scene();
-      scene.background = new THREE.Color(0x000000); // transparent feel
+      scene.background = new THREE.Color(0x0d47a1);
+      
+      camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 100);
+      camera.position.set(0, 0, 5);
 
-      camera3 = new THREE.PerspectiveCamera(60, window.innerWidth/window.innerHeight, 0.1, 100);
-      camera3.position.set(0,0,4);
+      renderer = new THREE.WebGLRenderer({ 
+        canvas: canvas, 
+        alpha: true, 
+        antialias: true,
+        preserveDrawingBuffer: true
+      });
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
-      // lights
-      const amb = new THREE.AmbientLight(0xfff7e6, 0.6);
-      scene.add(amb);
-      const dir = new THREE.DirectionalLight(0xfff1c4, 0.9);
-      dir.position.set(3,5,5); scene.add(dir);
+      // Освітлення
+      const ambientLight = new THREE.AmbientLight(0xffd700, 0.3);
+      scene.add(ambientLight);
+      
+      const directionalLight = new THREE.DirectionalLight(0xff6b6b, 0.8);
+      directionalLight.position.set(10, 10, 5);
+      scene.add(directionalLight);
 
-      // letter
       createChristmasLetter();
-
-      // group for strokes
-      textGroup = new THREE.Group(); scene.add(textGroup);
+      
+      textGroup = new THREE.Group();
+      scene.add(textGroup);
 
       animate();
     }
 
-    function createChristmasLetter(){
-      if (letterMesh) { scene.remove(letterMesh); letterMesh.geometry.dispose(); }
-      const geom = new THREE.PlaneGeometry(2.8,3.8,1,1);
-
-      // use canvas texture like before
-      const tex = makeLetterTexture();
-      const mat = new THREE.MeshStandardMaterial({ map:tex, roughness:0.7, metalness:0.1, transparent:true, side:THREE.DoubleSide });
-      letterMesh = new THREE.Mesh(geom, mat);
-      letterMesh.position.set(0,0,-1);
-      letterMesh.rotation.x = -0.07;
-      scene.add(letterMesh);
-      // small decorative floating snow spheres
-      for (let i=0;i<6;i++){
-        const s = new THREE.Mesh(new THREE.SphereGeometry(0.03,8,8), new THREE.MeshStandardMaterial({ color:0xffffff, emissive:0xaaffff, emissiveIntensity:0.2 }));
-        s.position.set((Math.random()-0.5)*3,(Math.random()-0.5)*2+0.8,-0.5+Math.random()*0.2);
-        scene.add(s);
-      }
+    // === РІЗДВЯНИЙ ЛИСТ ===
+    function createChristmasLetter() {
+      if (letter) scene.remove(letter);
+      
+      const letterGeometry = new THREE.PlaneGeometry(3.2, 4.2);
+      const letterTexture = createChristmasTexture();
+      
+      const letterMaterial = new THREE.MeshLambertMaterial({ 
+        map: letterTexture,
+        transparent: true,
+        opacity: 0.97
+      });
+      
+      letter = new THREE.Mesh(letterGeometry, letterMaterial);
+      letter.position.set(0, 0, -1);
+      letter.rotation.x = -0.15;
+      scene.add(letter);
     }
 
-    function makeLetterTexture(){
+    function createChristmasTexture() {
       const t = translations[currentLang];
-      const c = document.createElement('canvas');
-      c.width = 1024; c.height = 1024;
-      const ctx = c.getContext('2d');
-
-      // background
-      const g = ctx.createLinearGradient(0,0,1024,1024);
-      g.addColorStop(0, '#fff8e1');
-      g.addColorStop(1, '#ffecb3');
-      ctx.fillStyle = g; ctx.fillRect(0,0,1024,1024);
-
-      // border
-      ctx.strokeStyle = '#ffd700'; ctx.lineWidth = 28; ctx.strokeRect(48,48,928,928);
-
-      // title
-      ctx.fillStyle = '#b71c1c'; ctx.font = 'bold 64px "Patrick Hand", Georgia'; ctx.textAlign='center';
-      ctx.fillText(t.header || '', 512, 120);
-
-      // simple decorations
-      ctx.fillStyle='#2e7d32'; ctx.beginPath(); ctx.moveTo(140,760); ctx.lineTo(100,630); ctx.lineTo(180,630); ctx.fill();
-      ctx.fillStyle='#d32f2f'; ctx.beginPath(); ctx.arc(200,680,14,0,Math.PI*2); ctx.fill();
-
-      return new THREE.CanvasTexture(c);
+      const canvas = document.createElement('canvas');
+      canvas.width = 1024;
+      canvas.height = 1024;
+      const ctx = canvas.getContext('2d');
+      
+      // ЯСКРАВИЙ ФОН
+      const gradient = ctx.createLinearGradient(0, 0, 1024, 1024);
+      gradient.addColorStop(0, '#fffde7');
+      gradient.addColorStop(0.5, '#fff9c4');
+      gradient.addColorStop(1, '#fff59d');
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, 1024, 1024);
+      
+      // ВЕСЕЛІ ВІЗЕРУНКИ
+      ctx.fillStyle = 'rgba(255, 107, 107, 0.08)';
+      for (let i = 0; i < 400; i++) {
+        const x = Math.random() * 1024;
+        const y = Math.random() * 1024;
+        const size = Math.random() * 50 + 10;
+        ctx.beginPath();
+        ctx.arc(x, y, size, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      
+      // РАМКА
+      ctx.strokeStyle = '#FFD700';
+      ctx.lineWidth = 30;
+      ctx.strokeRect(40, 40, 944, 944);
+      
+      // ЗАГОЛОВОК
+      ctx.fillStyle = '#FF6B6B';
+      ctx.font = 'bold 70px "Comic Sans MS", cursive';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(t.header, 512, 140);
+      
+      const texture = new THREE.CanvasTexture(canvas);
+      return texture;
     }
 
-    // animate
-    function animate(){
+    // === АНІМАЦІЯ ===
+    function animate() {
       requestAnimationFrame(animate);
-
-      // finger trail decay
-      if (fingerTrail.length){
-        for (let i=0;i<fingerTrail.length;i++){
-          const m = fingerTrail[i].material;
-          m.opacity = Math.max(0, m.opacity - 0.01 - i*0.0005);
-          fingerTrail[i].scale.multiplyScalar(0.985);
-        }
-        // cleanup
-        while (fingerTrail.length && fingerTrail[0].material.opacity < 0.02){
-          const obj = fingerTrail.shift();
-          scene.remove(obj);
+      
+      // Анімація сліду
+      if (fingerTrail.length > 0) {
+        fingerTrail.forEach((point, index) => {
+          point.material.opacity = 1 - (index / fingerTrail.length);
+          point.scale.multiplyScalar(0.88);
+        });
+        
+        while (fingerTrail.length > 0 && fingerTrail[0].material.opacity < 0.1) {
+          scene.remove(fingerTrail.shift());
         }
       }
-
-      // gentle letter sway
-      if (letterMesh){
-        letterMesh.rotation.y = Math.sin(Date.now()*0.0008)*0.02;
+      
+      // Анімація листа
+      if (letter) {
+        const time = Date.now() * 0.001;
+        letter.rotation.y = Math.sin(time * 0.5) * 0.03;
+        letter.rotation.x = -0.15 + Math.sin(time * 0.3) * 0.02;
       }
-
-      renderer.render(scene, camera3);
+      
+      renderer.render(scene, camera);
     }
 
-    // --- Finger trail & strokes ---
-    function addFingerDot(pos){
-      const geom = new THREE.SphereGeometry(0.035,12,12);
-      const mat = new THREE.MeshStandardMaterial({ color:0xffd54f, emissive:0xffc107, emissiveIntensity:0.6, transparent:true, opacity:0.95 });
-      const s = new THREE.Mesh(geom, mat);
-      s.position.copy(pos);
-      scene.add(s);
-      fingerTrail.push(s);
-    }
-
-    function addStrokeFromPath(path){
-      if (!path || path.length < 3) return;
-      const curve = new THREE.CatmullRomCurve3(path);
-      const tubular = Math.max(4, Math.min(0.06, 0.04));
-      const geo = new THREE.TubeGeometry(curve, Math.max(8, path.length*2), 0.035, 8, false);
-      const mat = new THREE.MeshStandardMaterial({ color:0xc62828, roughness:0.4, metalness:0.2 });
-      const mesh = new THREE.Mesh(geo, mat);
-      textGroup.add(mesh);
-
-      // glow ring — simple pseudo-bloom
-      const geoG = new THREE.TubeGeometry(curve, Math.max(8, path.length*2), 0.055, 8, false);
-      const matG = new THREE.MeshBasicMaterial({ color:0xffd700, transparent:true, opacity:0.25 });
-      const glow = new THREE.Mesh(geoG, matG);
-      textGroup.add(glow);
-    }
-
-    // --- MediaPipe Hands callback ---
-    function onResults(results){
+    // === MEDIAPIPE HANDS ===
+    function onResults(results) {
       const t = translations[currentLang];
-      if (results.multiHandLandmarks && results.multiHandLandmarks.length){
-        const lm = results.multiHandLandmarks[0];
-        const tip = lm[8], pip = lm[6], mcp = lm[5];
+      
+      if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
+        const landmarks = results.multiHandLandmarks[0];
+        
+        const tip = landmarks[8];
+        const pip = landmarks[6];
+        const mcp = landmarks[5];
 
-        const tipToPip = Math.hypot(tip.x - pip.x, tip.y - pip.y);
-        const mcpToPip = Math.hypot(mcp.x - pip.x, mcp.y - pip.y);
-        const isExtended = tipToPip > mcpToPip * 0.6;
+        const tipToPipDist = Math.sqrt(
+          Math.pow(tip.x - pip.x, 2) + 
+          Math.pow(tip.y - pip.y, 2)
+        );
+        
+        const mcpToPipDist = Math.sqrt(
+          Math.pow(mcp.x - pip.x, 2) + 
+          Math.pow(mcp.y - pip.y, 2)
+        );
 
-        // map normalized coordinates to 3D plane coordinates (NDC-ish)
-        const ndcX = (tip.x - 0.5) * 3.2;
-        const ndcY = -(tip.y - 0.5) * 2.4;
-        const vec = new THREE.Vector3(ndcX, ndcY, -0.3);
+        const isFingerExtended = tipToPipDist > mcpToPipDist * 0.7;
 
-        if (isExtended){
-          if (!isDrawing){
-            // start drawing
+        const ndcX = (tip.x - 0.5) * 4;
+        const ndcY = -(tip.y - 0.5) * 3;
+        const vector = new THREE.Vector3(ndcX, ndcY, -0.2);
+
+        if (isFingerExtended) {
+          if (!isDrawing) {
             isDrawing = true;
             currentPath = [];
-            statusEl.textContent = t.status.drawing;
-            statusEl.style.color = '#d84315';
-            playTone(880,0.06);
+            status.textContent = t.status.drawing;
+            status.classList.add('pulse');
           }
-          currentPath.push(vec.clone());
-          addFingerDot(vec.clone());
+          
+          currentPath.push(vector.clone());
+          addFingerTrail(vector.clone());
+          
         } else {
-          if (isDrawing){
+          if (isDrawing && currentPath.length > 5) {
             isDrawing = false;
-            // complete stroke
-            addStrokeFromPath(currentPath);
+            addTextToLetter(currentPath);
             currentPath = [];
-            statusEl.textContent = t.status.done;
-            statusEl.style.color = '#2e7d32';
-            playTone(520,0.08);
-            setTimeout(()=>{ statusEl.textContent = t.status.initial; statusEl.style.color = '#b71c1c'; }, 1800);
-          } else {
-            // idle
-            statusEl.textContent = t.status.initial;
-            statusEl.style.color = '#b71c1c';
+            status.textContent = t.status.done;
+            status.classList.remove('pulse');
+            status.classList.add('success');
+            
+            // КОНФЕТТІ ПРИ УСПІХУ
+            createConfetti();
+            
+            setTimeout(() => status.classList.remove('success'), 2000);
           }
         }
       } else {
-        if (isDrawing){
+        if (isDrawing) {
           isDrawing = false;
-          addStrokeFromPath(currentPath);
+          if (currentPath.length > 5) {
+            addTextToLetter(currentPath);
+          }
           currentPath = [];
+          status.classList.remove('pulse');
         }
-        statusEl.textContent = translations[currentLang].status.initial;
-        statusEl.style.color = '#b71c1c';
+        status.textContent = t.status.initial;
       }
     }
 
-    // --- Camera management (enumerateDevices + cycle) ---
-    async function ensureDevicePermissions() {
-      // On some browsers device labels are empty until permission is granted,
-      // so request minimal permission first to get labels.
-      try {
-        const s = await navigator.mediaDevices.getUserMedia({video:true,audio:false});
-        s.getTracks().forEach(t => t.stop());
-      } catch(e){ /* ignore; we'll still try to enumerate */ }
-    }
-
-    async function updateDeviceList(){
-      const list = await navigator.mediaDevices.enumerateDevices();
-      devices = list.filter(d => d.kind === 'videoinput');
-      // populate cameraList UI
-      cameraListEl.innerHTML = '';
-      devices.forEach((d,i)=>{
-        const btn = document.createElement('button');
-        btn.textContent = `${i+1}. ${d.label || ('Camera ' + (i+1))}`;
-        btn.onclick = async () => {
-          cameraListEl.style.display = 'none';
-          await startCamera(d.deviceId);
-          currentDeviceIndex = i;
-          cameraBtn.textContent = `${translations[currentLang].buttons.camera} ${i+1}`;
-        };
-        cameraListEl.appendChild(btn);
+    function addFingerTrail(position) {
+      const geometry = new THREE.SphereGeometry(0.05, 10, 10);
+      const material = new THREE.MeshBasicMaterial({ 
+        color: new THREE.Color().setHSL(Math.random() * 0.3 + 0.5, 0.9, 0.6),
+        transparent: true,
+        opacity: 0.9
       });
-      cameraListEl.style.display = devices.length>1 ? 'block' : 'none';
-      // initially hide but keep content for quick selection
-      setTimeout(() => cameraListEl.style.display = 'none', 1200);
+      
+      const sphere = new THREE.Mesh(geometry, material);
+      sphere.position.copy(position);
+      scene.add(sphere);
+      
+      fingerTrail.push(sphere);
     }
 
-    async function startCamera(deviceId = null){
-      try {
-        // stop old
-        if (cameraStream) cameraStream.getTracks().forEach(t => t.stop());
-        const constraints = {
-          video: deviceId ? { deviceId: { exact: deviceId }, width:{ ideal:1280 }, height:{ ideal:720 } }
-                          : { facingMode: 'environment', width:{ ideal:1280 }, height:{ ideal:720 } }
-        };
-        cameraStream = await navigator.mediaDevices.getUserMedia(constraints);
-        const video = document.getElementById('video');
-        video.srcObject = cameraStream;
-        video.play();
+    function addTextToLetter(path) {
+      if (path.length < 4) return;
 
-        // stop previous MediaPipe camera
-        if (window.cameraProcessor) {
-          try { window.cameraProcessor.stop(); } catch(e){}
+      const curve = new THREE.CatmullRomCurve3(path);
+      
+      const geometry = new THREE.TubeGeometry(curve, path.length * 3, 0.04, 12, false);
+      const material = new THREE.MeshBasicMaterial({ 
+        color: new THREE.Color().setHSL(Math.random() * 0.1 + 0.8, 0.9, 0.5)
+      });
+      
+      const tube = new THREE.Mesh(geometry, material);
+      textGroup.add(tube);
+    }
+
+    // === ГАРАНТОВАНО ЗАДНЯ КАМЕРА ===
+    async function startCamera() {
+      try {
+        videoElement = document.getElementById('video');
+        
+        // СПОЧАТКУ ПРОБУЄМО ТОЧНО ЗАДНЮ КАМЕРУ
+        let constraints = {
+          video: {
+            facingMode: { exact: "environment" }, // ТОЧНО ЗАДНЯ
+            width: { ideal: 1920 },
+            height: { ideal: 1080 }
+          }
+        };
+
+        try {
+          cameraStream = await navigator.mediaDevices.getUserMedia(constraints);
+          currentCamera = 'environment';
+          console.log('✅ Back camera started successfully!');
+        } catch (exactError) {
+          console.log('🔄 Exact back camera failed, trying any camera...');
+          // ЯКЩО НЕ ВИЙШЛО, БЕРЕМО БУДЬ-ЯКУ КАМЕРУ
+          constraints.video = { facingMode: "environment" };
+          cameraStream = await navigator.mediaDevices.getUserMedia(constraints);
+          currentCamera = 'environment';
         }
-        // Use MediaPipe's Camera helper to feed frames
-        window.cameraProcessor = new Camera(video, {
-          onFrame: async () => { await hands.send({image: video}); },
+
+        videoElement.srcObject = cameraStream;
+        
+        // MEDIAPIPE
+        if (window.camera) {
+          window.camera.stop();
+        }
+        
+        window.camera = new Camera(videoElement, {
+          onFrame: async () => {
+            await hands.send({image: videoElement});
+          },
           width: 640,
           height: 480
         });
-        await window.cameraProcessor.start();
-
-        // update device list labels (some browsers only provide labels after stream)
-        await updateDeviceList();
-
-        // update UI label
-        const idx = devices.findIndex(d => d.deviceId === (deviceId || ''));
-        cameraBtn.textContent = `${translations[currentLang].buttons.camera} ${ (idx>=0 ? idx+1 : currentDeviceIndex+1) }`;
-
-      } catch (err) {
-        console.error('Camera start error:', err);
-        statusEl.textContent = 'Камера недоступна. Перевірте дозволи.';
-        playTone(200,0.1);
+        
+        await window.camera.start();
+        
+        updateCameraButtonText();
+        hideLoading();
+        
+      } catch (error) {
+        console.error('❌ All cameras failed:', error);
+        // ЯКЩО ВСЕ ПРОПАЛО, ПРОБУЄМО БУДЬ-ЯКУ КАМЕРУ
+        try {
+          cameraStream = await navigator.mediaDevices.getUserMedia({ video: true });
+          videoElement.srcObject = cameraStream;
+          await window.camera.start();
+          currentCamera = 'user';
+          updateCameraButtonText();
+          hideLoading();
+        } catch (finalError) {
+          loadingText.textContent = '❌ Camera not available. Please refresh.';
+        }
       }
     }
 
-    async function cycleCamera(){
-      if (!devices.length) await updateDeviceList();
-      if (!devices.length){
-        // fallback: simply restart with facingMode user
-        await startCamera();
-        return;
+    // === ПЕРЕМИКАННЯ КАМЕРИ ===
+    async function switchCamera() {
+      const t = translations[currentLang];
+      
+      if (cameraStream) {
+        cameraStream.getTracks().forEach(track => track.stop());
       }
-      currentDeviceIndex = (currentDeviceIndex + 1) % devices.length;
-      await startCamera(devices[currentDeviceIndex].deviceId);
-      cameraBtn.textContent = `${translations[currentLang].buttons.camera} ${currentDeviceIndex+1}`;
-      playTone(680,0.07);
+      
+      currentCamera = currentCamera === 'environment' ? 'user' : 'environment';
+      status.textContent = `🔄 Switching to ${currentCamera === 'environment' ? 'back' : 'front'} camera...`;
+      
+      await startCamera();
+      status.textContent = t.status.initial;
     }
 
-    // --- Clear text function ---
-    function clearText(){
-      while (textGroup.children.length) {
-        const c = textGroup.children[0];
-        textGroup.remove(c);
+    function updateCameraButtonText() {
+      const t = translations[currentLang];
+      if (currentCamera === 'environment') {
+        cameraBtn.textContent = t.status.cameraBack;
+      } else {
+        cameraBtn.textContent = t.status.cameraFront;
       }
-      statusEl.textContent = translations[currentLang].status.clear;
-      playTone(980,0.06);
-      setTimeout(()=>{ statusEl.textContent = translations[currentLang].status.initial; }, 1400);
     }
 
-    // --- Recording ---
-    function startRecording(){
+    function hideLoading() {
+      if (loadingScreen) {
+        loadingScreen.style.opacity = '0';
+        setTimeout(() => {
+          loadingScreen.style.display = 'none';
+        }, 1000);
+      }
+    }
+
+    // === ІНШІ ФУНКЦІЇ ===
+    function clearText() {
+      const t = translations[currentLang];
+      while (textGroup.children.length > 0) {
+        textGroup.remove(textGroup.children[0]);
+      }
+      status.textContent = t.status.clear;
+      status.classList.add('success');
+      
+      createConfetti();
+      
+      setTimeout(() => {
+        status.textContent = t.status.initial;
+        status.classList.remove('success');
+      }, 2000);
+    }
+
+    function switchLanguage(lang) {
+      currentLang = lang;
+      const t = translations[currentLang];
+      
+      document.title = t.title;
+      status.textContent = t.status.initial;
+      
+      document.getElementById('instructions').innerHTML = `
+        <h3>${t.instructions.title}</h3>
+        <p>${t.instructions.step1}</p>
+        <p>${t.instructions.step2}</p>
+        <p>${t.instructions.step3}</p>
+      `;
+      
+      clearBtn.textContent = t.buttons.clear;
+      recordBtn.textContent = isRecording ? t.buttons.stop : t.buttons.record;
+      langBtn.textContent = t.buttons.lang;
+      updateCameraButtonText();
+      
+      createChristmasLetter();
+    }
+
+    // === ІНІЦІАЛІЗАЦІЯ ===
+    async function initializeApp() {
+      createSnowflakes();
+      initThree();
+
+      // MEDIAPIPE
+      hands = new Hands({
+        locateFile: (file) => {
+          return `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`;
+        }
+      });
+
+      hands.setOptions({
+        maxNumHands: 1,
+        modelComplexity: 1,
+        minDetectionConfidence: 0.8,
+        minTrackingConfidence: 0.8
+      });
+
+      hands.onResults(onResults);
+
+      // ГАРАНТОВАНО ЗАПУСКАЄМО КАМЕРУ
+      await startCamera();
+
+      // ОБРОБНИКИ
+      langBtn.onclick = () => switchLanguage(currentLang === 'en' ? 'uk' : 'en');
+      cameraBtn.onclick = switchCamera;
+      clearBtn.onclick = clearText;
+      
+      recordBtn.onclick = () => {
+        if (isRecording) stopRecording();
+        else startRecording();
+      };
+
+      window.addEventListener('resize', () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+      });
+    }
+
+    // ЗАПИС ВІДЕО
+    function startRecording() {
+      const t = translations[currentLang];
+      recordedChunks = [];
+      
       try {
-        recordedChunks = [];
-        const stream = document.getElementById('canvas').captureStream(30);
-        mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/webm; codecs=vp9' });
-        mediaRecorder.ondataavailable = e => { if (e.data.size) recordedChunks.push(e.data); };
+        const stream = canvas.captureStream(30);
+        mediaRecorder = new MediaRecorder(stream);
+        mediaRecorder.ondataavailable = e => recordedChunks.push(e.data);
         mediaRecorder.onstop = () => {
           const blob = new Blob(recordedChunks, { type: 'video/webm' });
           const url = URL.createObjectURL(blob);
           const a = document.createElement('a');
           a.href = url;
-          a.download = `christmas-letter-${Date.now()}.webm`;
+          a.download = `christmas-magic-${Date.now()}.webm`;
           a.click();
-          URL.revokeObjectURL(url);
-          statusEl.textContent = translations[currentLang].status.saved;
-          playTone(840,0.12);
-          setTimeout(()=> statusEl.textContent = translations[currentLang].status.initial, 1800);
+          status.textContent = t.status.saved;
+          status.classList.add('success');
+          setTimeout(() => status.textContent = t.status.initial, 3000);
         };
         mediaRecorder.start();
         isRecording = true;
-        recordBtn.classList.add('recording'); recordBtn.textContent = translations[currentLang].buttons.stop;
-        statusEl.textContent = translations[currentLang].status.recording;
-        playTone(440,0.08);
-      } catch (e) {
-        console.error('Recording error', e);
-        statusEl.textContent = 'Recording not supported';
+        recordBtn.textContent = t.buttons.stop;
+        recordBtn.classList.add('recording');
+        status.textContent = t.status.recording;
+      } catch (error) {
+        status.textContent = '❌ Recording not supported';
       }
     }
-    function stopRecording(){
-      if (mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop();
-      isRecording = false;
-      recordBtn.classList.remove('recording'); recordBtn.textContent = translations[currentLang].buttons.record;
-    }
 
-    // --- Language switch ---
-    function switchLanguage(){
-      currentLang = currentLang === 'uk' ? 'en' : 'uk';
+    function stopRecording() {
       const t = translations[currentLang];
-      document.title = t.title;
-      langBtn.textContent = t.buttons.lang;
-      clearBtn.textContent = t.buttons.clear;
-      recordBtn.textContent = isRecording ? t.buttons.stop : t.buttons.record;
-      cameraBtn.textContent = t.buttons.camera;
-      // update instructions
-      document.getElementById('instructions').innerHTML = `<strong>🎄 ${t.title}</strong>
-        <div style="margin-top:8px">1. Show your index finger to the camera — it will start a trail ✨<br>2. Extend to write, bend to finish the stroke</div>`;
-      // recreate letter with new header
-      createChristmasLetter();
+      if (mediaRecorder) mediaRecorder.stop();
+      isRecording = false;
+      recordBtn.textContent = t.buttons.record;
+      recordBtn.classList.remove('recording');
     }
 
-    // --- Init MediaPipe Hands ---
-    async function initHands() {
-      hands = new Hands({
-        locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
-      });
-      hands.setOptions({maxNumHands:1, modelComplexity:1, minDetectionConfidence:0.6, minTrackingConfidence:0.6});
-      hands.onResults(onResults);
-    }
-
-    // --- App initialization ---
-    async function initializeApp(){
-      createSnowUI();
-      initThree();
-      await initHands();
-
-      // ensure we can see labels
-      await ensureDevicePermissions();
-      await updateDeviceList();
-      // start camera with best guess: prefer back/environment if available
-      if (devices.length){
-        // find one with 'back' or 'rear' in label if any
-        let preferred = devices.find(d => /back|rear|environment|задн/i.test(d.label)) || devices[0];
-        currentDeviceIndex = devices.indexOf(preferred);
-        await startCamera(preferred.deviceId);
-      } else {
-        await startCamera(); // try facingMode fallback
-      }
-
-      // UI events
-      langBtn.onclick = () => { switchLanguage(); playTone(720,0.06); };
-      cameraBtn.onclick = async () => { // open small list first if available
-        if (devices.length > 1){
-          // toggle cameraList
-          cameraListEl.style.display = cameraListEl.style.display === 'block' ? 'none' : 'block';
-          playTone(620,0.05);
-        } else {
-          await cycleCamera();
-        }
-      };
-      clearBtn.onclick = () => { clearText(); };
-      recordBtn.onclick = () => { if (isRecording) stopRecording(); else startRecording(); };
-
-      window.addEventListener('resize', () => {
-        camera3.aspect = window.innerWidth / window.innerHeight;
-        camera3.updateProjectionMatrix();
-        renderer.setSize(window.innerWidth, window.innerHeight);
-      });
-    }
-
-    // Start
     window.addEventListener('load', initializeApp);
-
-    // Small accessibility: resume audio context on first user gesture if suspended (for mobile Safari)
-    document.addEventListener('click', ()=>{ if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume(); }, { once:true });
-
   </script>
 </body>
 </html>
