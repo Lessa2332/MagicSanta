@@ -4,11 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>🎄 Christmas AR Thank You Letter | Різдвяний AR Лист Подяки</title>
+    <!-- Використовуємо правильні CDN посилання -->
     <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.3/dist/mindar-image.prod.js"></script>
     <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.3/dist/mindar-image-aframe.prod.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
     <style>
         * {
             margin: 0;
@@ -41,17 +40,6 @@
             width: 100%;
             height: 100%;
             z-index: 1;
-        }
-        
-        #video-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            z-index: 0;
-            opacity: 0;
         }
         
         #ui {
@@ -168,15 +156,21 @@
             box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
             backdrop-filter: blur(20px);
             max-width: 90%;
-            display: none;
         }
         
-        #marker-image {
-            max-width: 250px;
-            margin: 10px 0;
+        .marker-preview {
+            width: 250px;
+            height: 250px;
+            background: linear-gradient(45deg, #FFD700, #FF6B6B);
+            margin: 10px auto;
             border: 3px solid #FFD700;
             border-radius: 10px;
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: white;
+            font-weight: bold;
         }
         
         .success {
@@ -225,26 +219,6 @@
             100% { transform: rotate(360deg); }
         }
         
-        .finger-indicator {
-            position: absolute;
-            width: 20px;
-            height: 20px;
-            background: radial-gradient(circle, #e74c3c, #c0392b);
-            border-radius: 50%;
-            border: 2px solid white;
-            z-index: 50;
-            pointer-events: none;
-            display: none;
-            box-shadow: 0 0 15px rgba(231, 76, 60, 0.7);
-            animation: fingerPulse 1.5s infinite;
-        }
-        
-        @keyframes fingerPulse {
-            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.7); }
-            70% { transform: scale(1.1); box-shadow: 0 0 0 10px rgba(231, 76, 60, 0); }
-            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(231, 76, 60, 0); }
-        }
-        
         .snowflake {
             position: absolute;
             color: white;
@@ -267,6 +241,16 @@
                 transform: translateY(100vh) rotate(360deg) scale(1); 
                 opacity: 0; 
             }
+        }
+        
+        .draw-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 10;
+            pointer-events: none;
         }
         
         @media (max-width: 768px) {
@@ -330,49 +314,47 @@
         <div id="marker-info">
             <h3 id="marker-title">🎯 Christmas Marker</h3>
             <p id="marker-desc">Print this marker or open on another device:</p>
-            <img id="marker-image" src="./targets.png" alt="AR Marker">
-            <p id="marker-instruction">Point camera at marker to start drawing in air! 🎄</p>
+            <div class="marker-preview">
+                🎄 XMAS 🎅
+            </div>
+            <p id="marker-instruction">Point camera at marker to start writing to Santa! 🎄</p>
             <button class="control-btn" onclick="hideMarkerInfo()" style="background: linear-gradient(135deg, #e67e22, #d35400);" id="marker-ok-btn">OK!</button>
         </div>
 
-        <!-- Відео для MediaPipe -->
-        <video id="video-overlay" playsinline></video>
-        
-        <!-- Індикатор пальця -->
-        <div class="finger-indicator" id="fingerIndicator"></div>
+        <!-- Canvas для малювання -->
+        <canvas class="draw-canvas" id="drawCanvas"></canvas>
 
         <!-- Сніжинки -->
         <div id="snowflakes-container"></div>
 
         <div class="ar-overlay">
             <a-scene 
-                mindar-image="imageTargetSrc: ./targets.mind; autoStart: false; maxTrack: 1;"
+                mindar-image="imageTargetSrc: ./targets.mind; autoStart: true; maxTrack: 1;"
                 color-space="sRGB"
                 embedded
                 renderer="colorManagement: true, physicallyCorrectLights"
                 vr-mode-ui="enabled: false"
                 device-orientation-permission-ui="enabled: false"
-                screenshot="width: 1280; height: 720"
             >
                 <!-- Камера -->
                 <a-camera 
                     active="true"
                     position="0 0 0" 
                     mindar-image-target
-                    raycaster="objects: .drawable"
-                    cursor="fuse: false; rayOrigin: mouse;"
+                    wasd-controls="enabled: false"
+                    look-controls="enabled: false"
                 ></a-camera>
 
-                <!-- AR Ціль - маркер як полотно для малювання -->
+                <!-- AR Ціль -->
                 <a-entity mindar-image-target="targetIndex: 0">
-                    <!-- Область для малювання у повітрі над маркером -->
-                    <a-entity 
-                        id="drawing-surface"
-                        class="drawing-surface"
-                        position="0 0.3 0"
-                    >
-                        <!-- Тут будуть з'являтися намальовані лінії -->
-                    </a-entity>
+                    <!-- Проста підказка де малювати -->
+                    <a-text 
+                        value="Write here!"
+                        position="0 0.5 0"
+                        align="center"
+                        color="#FFD700"
+                        scale="2 2 2"
+                    ></a-text>
                 </a-entity>
             </a-scene>
         </div>
@@ -381,75 +363,68 @@
             <div id="status">🎄 Searching for Christmas marker...</div>
             <div style="display: flex;">
                 <button id="clearBtn" class="control-btn">✨ Clear</button>
-                <button id="screenshotBtn" class="control-btn">📸 Screenshot</button>
+                <button id="screenshotBtn" class="control-btn">📸 Save</button>
                 <button id="langBtn" class="control-btn">🌐 EN/UA</button>
             </div>
         </div>
 
         <div id="instructions">
-            <h3 id="instructions-title">✍️ Create Christmas Wish!</h3>
+            <h3 id="instructions-title">✍️ Write to Santa!</h3>
             <div class="instruction-line" id="instruction1">1. Point camera at marker</div>
-            <div class="instruction-line" id="instruction2">2. Show index finger 🖐️</div>
-            <div class="instruction-line" id="instruction3">3. Extend finger to write in air</div>
-            <div class="instruction-line" id="instruction4">4. Move finger to create text ✨</div>
+            <div class="instruction-line" id="instruction2">2. Touch & drag to draw ✨</div>
+            <div class="instruction-line" id="instruction3">3. Write your Christmas wish</div>
+            <div class="instruction-line" id="instruction4">4. Save to send to Santa! 🎅</div>
         </div>
     </div>
 
     <script>
         // === ГЛОБАЛЬНІ ЗМІННІ ===
         let isDrawing = false;
-        let currentLine = null;
-        let currentPoints = [];
         let sceneEl;
-        let drawingSurface;
         let isMarkerVisible = false;
-        let hands;
-        let camera;
-        let videoElement;
         let currentLanguage = 'en';
+        let canvas, ctx;
 
         // Тексти для двох мов
         const translations = {
             en: {
                 loading: "🎄 Loading Christmas Magic... ✨",
                 statusSearching: "🎄 Searching for Christmas marker...",
-                statusFound: "✅ Marker found! Show finger ✋",
-                statusDrawing: "✍️ Writing Christmas wish...",
-                statusAdded: "✅ Wish added! Create more ✨",
-                statusCleared: "✨ All wishes cleared!",
-                statusScreenshot: "📸 Christmas screenshot saved!",
-                instructionsTitle: "✍️ Create Christmas Wish!",
+                statusFound: "✅ Marker found! Touch to draw ✨",
+                statusDrawing: "✍️ Writing to Santa...",
+                statusCleared: "✨ Message cleared!",
+                statusScreenshot: "📸 Message to Santa saved!",
+                instructionsTitle: "✍️ Write to Santa!",
                 instruction1: "1. Point camera at marker",
-                instruction2: "2. Show index finger 🖐️",
-                instruction3: "3. Extend finger to write in air",
-                instruction4: "4. Move finger to create text ✨",
+                instruction2: "2. Touch & drag to draw ✨",
+                instruction3: "3. Write your Christmas wish",
+                instruction4: "4. Save to send to Santa! 🎅",
                 clearBtn: "✨ Clear",
-                screenshotBtn: "📸 Screenshot",
+                screenshotBtn: "📸 Save",
                 langBtn: "🌐 UA",
                 markerTitle: "🎯 Christmas Marker",
                 markerDesc: "Print this marker or open on another device:",
-                markerInstruction: "Point camera at marker to start drawing in air! 🎄",
+                markerInstruction: "Point camera at marker to start writing to Santa! 🎄",
                 markerOk: "OK!"
             },
             uk: {
                 loading: "🎄 Завантаження Різдвяної Магії... ✨",
                 statusSearching: "🎄 Шукаємо різдвяний маркер...",
-                statusFound: "✅ Маркер знайдено! Покажіть палець ✋",
-                statusDrawing: "✍️ Пишемо різдвяне побажання...",
-                statusAdded: "✅ Побажання додано! Створіть ще ✨",
-                statusCleared: "✨ Всі побажання очищено!",
-                statusScreenshot: "📸 Різдвяний знімок збережено!",
-                instructionsTitle: "✍️ Створіть Різдвяне Побажання!",
+                statusFound: "✅ Маркер знайдено! Торкайтеся, щоб малювати ✨",
+                statusDrawing: "✍️ Пишемо Санті...",
+                statusCleared: "✨ Повідомлення очищено!",
+                statusScreenshot: "📸 Лист до Санти збережено!",
+                instructionsTitle: "✍️ Напишіть Санті!",
                 instruction1: "1. Наведіть камеру на маркер",
-                instruction2: "2. Покажіть вказівний палець 🖐️",
-                instruction3: "3. Витягніть палець, щоб писати",
-                instruction4: "4. Рухайте пальцем для напису ✨",
+                instruction2: "2. Торкайтеся та тягніть для малювання ✨",
+                instruction3: "3. Напишіть своє різдвяне побажання",
+                instruction4: "4. Збережіть, щоб відправити Санті! 🎅",
                 clearBtn: "✨ Очистити",
-                screenshotBtn: "📸 Знімок",
+                screenshotBtn: "📸 Зберегти",
                 langBtn: "🌐 EN",
                 markerTitle: "🎯 Різдвяний Маркер",
                 markerDesc: "Роздрукуйте маркер або відкрийте на іншому пристрої:",
-                markerInstruction: "Наведіть камеру на маркер, щоб почати малювати у повітрі! 🎄",
+                markerInstruction: "Наведіть камеру на маркер, щоб написати Санті! 🎄",
                 markerOk: "Готово!"
             }
         };
@@ -463,7 +438,6 @@
         function updateTexts() {
             const t = translations[currentLanguage];
             
-            // Оновлення тексту
             document.querySelector('#loading div:last-child').textContent = t.loading;
             document.getElementById('status').textContent = isMarkerVisible ? t.statusFound : t.statusSearching;
             document.getElementById('instructions-title').textContent = t.instructionsTitle;
@@ -501,19 +475,23 @@
         // === ІНІЦІАЛІЗАЦІЯ ===
         document.addEventListener('DOMContentLoaded', function() {
             sceneEl = document.querySelector('a-scene');
-            drawingSurface = document.querySelector('#drawing-surface');
-            videoElement = document.querySelector('#video-overlay');
+            
+            // Ініціалізація canvas для малювання
+            initCanvas();
             
             // Створюємо сніжинки
             createSnowflakes();
             
             // Очікуємо завантаження сцени
             sceneEl.addEventListener('loaded', function() {
-                console.log('🎯 Сцена завантажена, ініціалізація AR...');
-                initAR();
-                setupHandTracking();
+                console.log('🎯 Сцена завантажена');
                 setupEventListeners();
-                showMarkerInfo();
+                updateTexts();
+                
+                // Приховуємо екран завантаження
+                setTimeout(() => {
+                    document.getElementById('loading').style.display = 'none';
+                }, 2000);
             });
             
             // Слухаємо події MindAR
@@ -523,6 +501,9 @@
                 const t = translations[currentLanguage];
                 document.getElementById('status').textContent = t.statusFound;
                 document.getElementById('status').classList.add('success');
+                
+                // Вмикаємо малювання коли маркер знайдено
+                canvas.style.pointerEvents = 'auto';
             });
             
             sceneEl.addEventListener('mindar-target-lost', function(event) {
@@ -531,226 +512,113 @@
                 const t = translations[currentLanguage];
                 document.getElementById('status').textContent = t.statusSearching;
                 document.getElementById('status').classList.remove('success');
-                stopDrawing();
+                
+                // Вимикаємо малювання коли маркер втрачено
+                canvas.style.pointerEvents = 'none';
+                isDrawing = false;
             });
         });
 
-        // === ІНІЦІАЛІЗАЦІЯ AR ===
-        function initAR() {
-            const arSystem = sceneEl.systems["mindar-image-system"];
-            arSystem.start();
+        // === ІНІЦІАЛІЗАЦІЯ CANVAS ===
+        function initCanvas() {
+            canvas = document.getElementById('drawCanvas');
+            ctx = canvas.getContext('2d');
             
-            console.log('🚀 MindAR запущено');
-            
-            setTimeout(() => {
-                document.getElementById('loading').style.display = 'none';
-            }, 2000);
-        }
-
-        // === MEDIAPIPE HANDS - ВІДСТЕЖЕННЯ ПАЛЬЦЯ ===
-        function setupHandTracking() {
-            console.log('🖐️ Ініціалізація MediaPipe Hands...');
-            
-            hands = new Hands({
-                locateFile: (file) => {
-                    return `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`;
-                }
-            });
-
-            hands.setOptions({
-                maxNumHands: 1,
-                modelComplexity: 1,
-                minDetectionConfidence: 0.5, // Знизимо для кращого виявлення
-                minTrackingConfidence: 0.3
-            });
-
-            hands.onResults(onHandResults);
-
-            camera = new Camera(videoElement, {
-                onFrame: async () => {
-                    if (hands) {
-                        await hands.send({image: videoElement});
-                    }
-                },
-                width: 640,
-                height: 480
-            });
-            
-            startBackCamera();
-        }
-
-        // === ЗАПУСК ЗАДНЬОЇ КАМЕРИ ===
-        async function startBackCamera() {
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({
-                    video: {
-                        facingMode: { exact: "environment" },
-                        width: { ideal: 1280 },
-                        height: { ideal: 720 }
-                    }
-                });
+            // Встановлюємо розміри canvas
+            function resizeCanvas() {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
                 
-                videoElement.srcObject = stream;
-                await camera.start();
-                console.log('📷 Задня камера успішно запущена!');
-                
-            } catch (error) {
-                console.log('🔄 Пробуємо звичайну камеру...');
-                
-                try {
-                    const stream = await navigator.mediaDevices.getUserMedia({
-                        video: {
-                            facingMode: "environment",
-                            width: { ideal: 1280 },
-                            height: { ideal: 720 }
-                        }
-                    });
-                    
-                    videoElement.srcObject = stream;
-                    await camera.start();
-                    console.log('📷 Камера запущена');
-                    
-                } catch (fallbackError) {
-                    console.error('❌ Не вдалося запустити камеру:', fallbackError);
-                    const t = translations[currentLanguage];
-                    document.getElementById('status').textContent = '❌ Camera error. Reload page.';
-                }
-            }
-        }
-
-        // === ОБРОБКА РЕЗУЛЬТАТІВ ВІДСТЕЖЕННЯ РУК ===
-        function onHandResults(results) {
-            if (!isMarkerVisible) return;
-
-            const fingerIndicator = document.getElementById('fingerIndicator');
-            
-            if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
-                const landmarks = results.multiHandLandmarks[0];
-                const indexFingerTip = landmarks[8];
-                
-                // Відображення індикатора пальця
-                const x = indexFingerTip.x * window.innerWidth;
-                const y = indexFingerTip.y * window.innerHeight;
-                fingerIndicator.style.left = (x - 10) + 'px';
-                fingerIndicator.style.top = (y - 10) + 'px';
-                fingerIndicator.style.display = 'block';
-                
-                // Визначення стану пальця
-                const isFingerExtended = checkFingerExtended(landmarks);
-                
-                // Конвертація координат у 3D-простір AR
-                const fingerPosition = convertToARPosition(indexFingerTip);
-                
-                console.log('🖐️ Палець:', {x: fingerPosition.x, y: fingerPosition.y, z: fingerPosition.z, extended: isFingerExtended});
-                
-                if (isFingerExtended) {
-                    if (!isDrawing) {
-                        startDrawing(fingerPosition);
-                    } else {
-                        addPointToDrawing(fingerPosition);
-                    }
-                } else {
-                    if (isDrawing) {
-                        stopDrawing();
-                    }
-                }
-            } else {
-                fingerIndicator.style.display = 'none';
-                if (isDrawing) {
-                    stopDrawing();
-                }
-            }
-        }
-
-        // === ПЕРЕВІРКА ЧИ ПАЛЕЦЬ ВИТЯГНУТИЙ ===
-        function checkFingerExtended(landmarks) {
-            const tip = landmarks[8];
-            const pip = landmarks[6];
-            const mcp = landmarks[5];
-            
-            // Проста перевірка - якщо кінчик пальця вище середнього суглоба
-            return tip.y < pip.y;
-        }
-
-        // === КОНВЕРТАЦІЯ КООРДИНАТ У 3D-ПРОСТІР AR ===
-        function convertToARPosition(landmark) {
-            // Простіша конвертація для тестування
-            const x = (landmark.x - 0.5) * 2.0;
-            const y = -(landmark.y - 0.5) * 2.0 + 0.3;
-            const z = -0.1; // Фіксована відстань перед камерою
-            
-            return {x: x, y: y, z: z};
-        }
-
-        // === ФУНКЦІЇ МАЛЮВАННЯ ===
-        function startDrawing(position) {
-            if (!isMarkerVisible) return;
-            
-            console.log('🎨 Початок малювання:', position);
-            
-            isDrawing = true;
-            currentPoints = [position];
-            
-            currentLine = document.createElement('a-entity');
-            currentLine.setAttribute('line', {
-                points: formatPoints(currentPoints),
-                color: getRandomChristmasColor(),
-                linewidth: 15, // Товщі лінії
-                opacity: 0.8
-            });
-            
-            drawingSurface.appendChild(currentLine);
-            const t = translations[currentLanguage];
-            document.getElementById('status').textContent = t.statusDrawing;
-            document.getElementById('status').classList.add('pulse');
-        }
-
-        function addPointToDrawing(position) {
-            if (!isDrawing || !currentLine || !isMarkerVisible) return;
-            
-            // Додаємо точку без перевірки відстані для плавнішого малювання
-            currentPoints.push(position);
-            
-            // Обмежуємо кількість точок для продуктивності
-            if (currentPoints.length > 50) {
-                currentPoints.shift();
+                // Налаштування стилю малювання
+                ctx.lineWidth = 8;
+                ctx.lineCap = 'round';
+                ctx.lineJoin = 'round';
+                ctx.globalAlpha = 0.9;
             }
             
-            currentLine.setAttribute('line', {
-                points: formatPoints(currentPoints),
-                color: getRandomChristmasColor(),
-                linewidth: 15,
-                opacity: 0.8
-            });
+            resizeCanvas();
+            window.addEventListener('resize', resizeCanvas);
+            
+            // Обробники подій малювання
+            setupDrawingEvents();
         }
 
-        function stopDrawing() {
-            if (!isDrawing) return;
+        // === МАЛЮВАННЯ НА CANVAS ===
+        function setupDrawingEvents() {
+            let lastX = 0;
+            let lastY = 0;
             
-            console.log('🛑 Зупинка малювання');
+            function startDrawing(x, y) {
+                if (!isMarkerVisible) return;
+                
+                isDrawing = true;
+                lastX = x;
+                lastY = y;
+                
+                ctx.strokeStyle = getRandomChristmasColor();
+                ctx.beginPath();
+                ctx.moveTo(x, y);
+                
+                const t = translations[currentLanguage];
+                document.getElementById('status').textContent = t.statusDrawing;
+                document.getElementById('status').classList.add('pulse');
+            }
             
-            isDrawing = false;
-            currentLine = null;
-            currentPoints = [];
+            function draw(x, y) {
+                if (!isDrawing) return;
+                
+                ctx.lineTo(x, y);
+                ctx.stroke();
+                lastX = x;
+                lastY = y;
+            }
             
-            const t = translations[currentLanguage];
-            document.getElementById('status').textContent = t.statusAdded;
-            document.getElementById('status').classList.remove('pulse');
+            function stopDrawing() {
+                if (!isDrawing) return;
+                
+                isDrawing = false;
+                ctx.closePath();
+                
+                const t = translations[currentLanguage];
+                document.getElementById('status').textContent = t.statusFound;
+                document.getElementById('status').classList.remove('pulse');
+            }
             
-            setTimeout(() => {
-                if (isMarkerVisible) {
-                    document.getElementById('status').textContent = t.statusFound;
-                }
-            }, 3000);
+            // Touch events
+            canvas.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                const touch = e.touches[0];
+                const rect = canvas.getBoundingClientRect();
+                startDrawing(touch.clientX - rect.left, touch.clientY - rect.top);
+            });
+            
+            canvas.addEventListener('touchmove', (e) => {
+                e.preventDefault();
+                const touch = e.touches[0];
+                const rect = canvas.getBoundingClientRect();
+                draw(touch.clientX - rect.left, touch.clientY - rect.top);
+            });
+            
+            canvas.addEventListener('touchend', stopDrawing);
+            
+            // Mouse events
+            canvas.addEventListener('mousedown', (e) => {
+                const rect = canvas.getBoundingClientRect();
+                startDrawing(e.clientX - rect.left, e.clientY - rect.top);
+            });
+            
+            canvas.addEventListener('mousemove', (e) => {
+                const rect = canvas.getBoundingClientRect();
+                draw(e.clientX - rect.left, e.clientY - rect.top);
+            });
+            
+            canvas.addEventListener('mouseup', stopDrawing);
+            canvas.addEventListener('mouseleave', stopDrawing);
         }
 
         function getRandomChristmasColor() {
             const colors = ['#e74c3c', '#2ecc71', '#3498db', '#9b59b6', '#e67e22', '#f1c40f'];
             return colors[Math.floor(Math.random() * colors.length)];
-        }
-
-        function formatPoints(points) {
-            return points.map(p => `${p.x} ${p.y} ${p.z}`).join(', ');
         }
 
         // === ОБРОБНИКИ ПОДІЙ ===
@@ -762,9 +630,7 @@
 
         // === ОЧИЩЕННЯ ===
         function clearDrawing() {
-            const lines = drawingSurface.querySelectorAll('[line]');
-            lines.forEach(line => drawingSurface.removeChild(line));
-            
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
             const t = translations[currentLanguage];
             document.getElementById('status').textContent = t.statusCleared;
             document.getElementById('status').classList.add('success');
@@ -785,7 +651,28 @@
             }
             
             try {
-                sceneEl.components.screenshot.capture('perspective');
+                // Створюємо тимчасовий canvas для знімка
+                const tempCanvas = document.createElement('canvas');
+                const tempCtx = tempCanvas.getContext('2d');
+                
+                tempCanvas.width = canvas.width;
+                tempCanvas.height = canvas.height;
+                
+                // Копіюємо вміст
+                tempCtx.drawImage(canvas, 0, 0);
+                
+                // Додаємо текст
+                tempCtx.font = '30px Georgia';
+                tempCtx.fillStyle = '#FFD700';
+                tempCtx.textAlign = 'center';
+                tempCtx.fillText('🎅 To Santa 🎄', tempCanvas.width / 2, 50);
+                
+                // Зберігаємо зображення
+                const link = document.createElement('a');
+                link.download = 'christmas-message-to-santa.png';
+                link.href = tempCanvas.toDataURL();
+                link.click();
+                
                 const t = translations[currentLanguage];
                 document.getElementById('status').textContent = t.statusScreenshot;
                 document.getElementById('status').classList.add('success');
@@ -797,20 +684,21 @@
                     }
                 }, 3000);
             } catch (error) {
-                alert(currentLanguage === 'en' ? '❌ Screenshot error' : '❌ Помилка при знімку');
+                alert(currentLanguage === 'en' ? 
+                    '✅ Your message was created! Take a manual screenshot 📸' : 
+                    '✅ Ваше повідомлення створено! Зробіть знімок екрана вручну 📸');
             }
         }
 
         // === ІНФОРМАЦІЯ ПРО МАРКЕР ===
-        function showMarkerInfo() {
-            setTimeout(() => {
-                document.getElementById('marker-info').style.display = 'block';
-            }, 1000);
-        }
-
         function hideMarkerInfo() {
             document.getElementById('marker-info').style.display = 'none';
         }
+
+        // Автоматично показуємо інформацію про маркер при завантаженні
+        setTimeout(() => {
+            document.getElementById('marker-info').style.display = 'block';
+        }, 1000);
     </script>
 </body>
 </html>
