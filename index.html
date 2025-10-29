@@ -330,7 +330,7 @@
         <div id="marker-info">
             <h3 id="marker-title">🎯 Christmas Marker</h3>
             <p id="marker-desc">Print this marker or open on another device:</p>
-            <img id="marker-image" src="https://cdn.jsdelivr.net/gh/hiukim/mind-ar-js@1.2.3/examples/image-tracking/assets/band-example/band-target.png" alt="AR Marker">
+            <img id="marker-image" src="./targets.png" alt="AR Marker">
             <p id="marker-instruction">Point camera at marker to start drawing in air! 🎄</p>
             <button class="control-btn" onclick="hideMarkerInfo()" style="background: linear-gradient(135deg, #e67e22, #d35400);" id="marker-ok-btn">OK!</button>
         </div>
@@ -369,7 +369,7 @@
                     <a-entity 
                         id="drawing-surface"
                         class="drawing-surface"
-                        position="0 0.5 0"
+                        position="0 0.3 0"
                     >
                         <!-- Тут будуть з'являтися намальовані лінії -->
                     </a-entity>
@@ -509,6 +509,7 @@
             
             // Очікуємо завантаження сцени
             sceneEl.addEventListener('loaded', function() {
+                console.log('🎯 Сцена завантажена, ініціалізація AR...');
                 initAR();
                 setupHandTracking();
                 setupEventListeners();
@@ -559,8 +560,8 @@
             hands.setOptions({
                 maxNumHands: 1,
                 modelComplexity: 1,
-                minDetectionConfidence: 0.7,
-                minTrackingConfidence: 0.5
+                minDetectionConfidence: 0.5, // Знизимо для кращого виявлення
+                minTrackingConfidence: 0.3
             });
 
             hands.onResults(onHandResults);
@@ -640,6 +641,8 @@
                 // Конвертація координат у 3D-простір AR
                 const fingerPosition = convertToARPosition(indexFingerTip);
                 
+                console.log('🖐️ Палець:', {x: fingerPosition.x, y: fingerPosition.y, z: fingerPosition.z, extended: isFingerExtended});
+                
                 if (isFingerExtended) {
                     if (!isDrawing) {
                         startDrawing(fingerPosition);
@@ -665,28 +668,16 @@
             const pip = landmarks[6];
             const mcp = landmarks[5];
             
-            const tipToPip = Math.sqrt(
-                Math.pow(tip.x - pip.x, 2) + 
-                Math.pow(tip.y - pip.y, 2)
-            );
-            
-            const pipToMcp = Math.sqrt(
-                Math.pow(pip.x - mcp.x, 2) + 
-                Math.pow(pip.y - mcp.y, 2)
-            );
-            
-            return tipToPip > pipToMcp * 0.8;
+            // Проста перевірка - якщо кінчик пальця вище середнього суглоба
+            return tip.y < pip.y;
         }
 
         // === КОНВЕРТАЦІЯ КООРДИНАТ У 3D-ПРОСТІР AR ===
         function convertToARPosition(landmark) {
-            const scale = 2.5;
-            const offsetX = 0;
-            const offsetY = 0.5;
-            
-            const x = (landmark.x - 0.5) * scale + offsetX;
-            const y = -(landmark.y - 0.5) * scale + offsetY;
-            const z = -landmark.z * 0.3;
+            // Простіша конвертація для тестування
+            const x = (landmark.x - 0.5) * 2.0;
+            const y = -(landmark.y - 0.5) * 2.0 + 0.3;
+            const z = -0.1; // Фіксована відстань перед камерою
             
             return {x: x, y: y, z: z};
         }
@@ -695,6 +686,8 @@
         function startDrawing(position) {
             if (!isMarkerVisible) return;
             
+            console.log('🎨 Початок малювання:', position);
+            
             isDrawing = true;
             currentPoints = [position];
             
@@ -702,7 +695,8 @@
             currentLine.setAttribute('line', {
                 points: formatPoints(currentPoints),
                 color: getRandomChristmasColor(),
-                linewidth: 10
+                linewidth: 15, // Товщі лінії
+                opacity: 0.8
             });
             
             drawingSurface.appendChild(currentLine);
@@ -714,32 +708,26 @@
         function addPointToDrawing(position) {
             if (!isDrawing || !currentLine || !isMarkerVisible) return;
             
-            if (currentPoints.length > 0) {
-                const lastPoint = currentPoints[currentPoints.length - 1];
-                const distance = Math.sqrt(
-                    Math.pow(position.x - lastPoint.x, 2) +
-                    Math.pow(position.y - lastPoint.y, 2) +
-                    Math.pow(position.z - lastPoint.z, 2)
-                );
-                
-                if (distance < 0.01) return;
-            }
-            
+            // Додаємо точку без перевірки відстані для плавнішого малювання
             currentPoints.push(position);
             
-            if (currentPoints.length > 80) {
+            // Обмежуємо кількість точок для продуктивності
+            if (currentPoints.length > 50) {
                 currentPoints.shift();
             }
             
             currentLine.setAttribute('line', {
                 points: formatPoints(currentPoints),
                 color: getRandomChristmasColor(),
-                linewidth: 10
+                linewidth: 15,
+                opacity: 0.8
             });
         }
 
         function stopDrawing() {
             if (!isDrawing) return;
+            
+            console.log('🛑 Зупинка малювання');
             
             isDrawing = false;
             currentLine = null;
@@ -815,18 +803,13 @@
 
         // === ІНФОРМАЦІЯ ПРО МАРКЕР ===
         function showMarkerInfo() {
-            document.getElementById('marker-info').style.display = 'block';
+            setTimeout(() => {
+                document.getElementById('marker-info').style.display = 'block';
+            }, 1000);
         }
 
         function hideMarkerInfo() {
             document.getElementById('marker-info').style.display = 'none';
-        }
-
-        // Автоматично показуємо інформацію про маркер при завантаженні
-        function showMarkerInfo() {
-            setTimeout(() => {
-                document.getElementById('marker-info').style.display = 'block';
-            }, 1000);
         }
     </script>
 </body>
