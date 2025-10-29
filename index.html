@@ -75,6 +75,7 @@
     #controls {
       display: flex;
       gap: 10px;
+      flex-wrap: wrap;
     }
     
     #clearBtn {
@@ -83,6 +84,12 @@
     
     #langBtn {
       background: linear-gradient(135deg, #27ae60, #2ecc71);
+      font-size: 14px;
+      padding: 8px 16px;
+    }
+    
+    #cameraBtn {
+      background: linear-gradient(135deg, #3498db, #2980b9);
       font-size: 14px;
       padding: 8px 16px;
     }
@@ -147,6 +154,7 @@
       <div id="status">Point your index finger ✋</div>
       <div id="controls">
         <button id="langBtn">🇺🇦 UA</button>
+        <button id="cameraBtn">📷 Rear</button>
         <button id="clearBtn">Clear</button>
         <button id="recordBtn">Record Video</button>
       </div>
@@ -192,7 +200,8 @@
           clear: 'Clear',
           record: 'Record Video',
           stop: 'Stop Recording',
-          lang: '🇺🇦 UA'
+          lang: '🇺🇦 UA',
+          camera: '📷 Rear'
         },
         header: 'Thank You Letter'
       },
@@ -216,7 +225,8 @@
           clear: 'Очистити',
           record: 'Записати відео',
           stop: 'Зупинити запис',
-          lang: '🇺🇸 EN'
+          lang: '🇺🇸 EN',
+          camera: '📷 Передня'
         },
         header: 'Лист Подяки'
       }
@@ -232,6 +242,7 @@
     let isRecording = false;
     let fingerTrail = [];
     let videoElement;
+    let currentCamera = 'rear'; // 'rear' or 'front'
 
     // Language switch function
     function switchLanguage(lang) {
@@ -256,6 +267,7 @@
       clearBtn.textContent = t.buttons.clear;
       recordBtn.textContent = isRecording ? t.buttons.stop : t.buttons.record;
       langBtn.textContent = t.buttons.lang;
+      cameraBtn.textContent = t.buttons.camera;
       
       // Update header in texture
       if (scroll) {
@@ -270,6 +282,7 @@
     const recordBtn = document.getElementById('recordBtn');
     const clearBtn = document.getElementById('clearBtn');
     const langBtn = document.getElementById('langBtn');
+    const cameraBtn = document.getElementById('cameraBtn');
 
     // === Three.js ініціалізація ===
     function initThree() {
@@ -405,20 +418,30 @@
         // Вказівний палець — кінчик
         const tip = landmarks[8]; // INDEX_FINGER_TIP
         const mcp = landmarks[5]; // INDEX_FINGER_MCP
+        const pip = landmarks[6]; // INDEX_FINGER_PIP
+        const dip = landmarks[7]; // INDEX_FINGER_DIP
 
-        // Перетворення в 3D
-        const ndcX = (tip.x * 2 - 1);
-        const ndcY = -(tip.y * 2 - 1);
-        const vector = new THREE.Vector3(ndcX * 2, ndcY * 1.5, -0.5);
-
-        // Відстань між кінчиком і основою
-        const dist = Math.sqrt(
-          Math.pow(tip.x - mcp.x, 2) + 
-          Math.pow(tip.y - mcp.y, 2)
+        // Перевірка чи палець витягнутий
+        const tipToPipDist = Math.sqrt(
+          Math.pow(tip.x - pip.x, 2) + 
+          Math.pow(tip.y - pip.y, 2)
+        );
+        
+        const mcpToPipDist = Math.sqrt(
+          Math.pow(mcp.x - pip.x, 2) + 
+          Math.pow(mcp.y - pip.y, 2)
         );
 
-        // Якщо палець "витягнутий" — малюємо
-        if (dist > 0.1) {
+        // Якщо палець витягнутий - малюємо
+        const isFingerExtended = tipToPipDist > mcpToPipDist * 0.7;
+
+        // Перетворення координат з MediaPipe в Three.js
+        // Корекція координат для більш точної відповідності
+        const ndcX = (tip.x - 0.5) * 3;
+        const ndcY = -(tip.y - 0.5) * 2.5;
+        const vector = new THREE.Vector3(ndcX, ndcY, -0.5);
+
+        if (isFingerExtended) {
           if (!isDrawing) {
             isDrawing = true;
             currentPath = [];
@@ -455,11 +478,11 @@
 
     // === Додаємо слід пальця ===
     function addFingerTrail(position) {
-      const geometry = new THREE.SphereGeometry(0.02, 8, 8);
+      const geometry = new THREE.SphereGeometry(0.03, 8, 8); // Збільшено розмір
       const material = new THREE.MeshBasicMaterial({ 
         color: 0xF9D423,
         transparent: true,
-        opacity: 0.7
+        opacity: 0.8
       });
       
       const sphere = new THREE.Mesh(geometry, material);
@@ -471,16 +494,25 @@
 
     // === Додаємо текст на пергамент ===
     function addTextToScroll(path) {
-      if (path.length < 5) return;
+      if (path.length < 3) return;
 
-      const geometry = new THREE.BufferGeometry().setFromPoints(path);
-      const material = new THREE.LineBasicMaterial({ 
-        color: 0x5d2a00,
-        linewidth: 3
+      // Використовуємо TubeGeometry для товстішої лінії
+      const curve = new THREE.CatmullRomCurve3(path);
+      
+      const geometry = new THREE.TubeGeometry(
+        curve,
+        path.length * 2, // Кількість сегментів
+        0.03, // Радіус трубки - збільшено для товщої лінії
+        8, // Кількість радіальних сегментів
+        false
+      );
+      
+      const material = new THREE.MeshBasicMaterial({ 
+        color: 0x5d2a00
       });
       
-      const line = new THREE.Line(geometry, material);
-      textGroup.add(line);
+      const tube = new THREE.Mesh(geometry, material);
+      textGroup.add(tube);
     }
 
     // === Очищення тексту ===
@@ -495,6 +527,58 @@
         status.textContent = t.status.initial;
         status.classList.remove('success');
       }, 2000);
+    }
+
+    // === Перемикання камери ===
+    async function switchCamera() {
+      const t = translations[currentLang];
+      
+      if (window.cameraInstance) {
+        await window.cameraInstance.stop();
+      }
+      
+      currentCamera = currentCamera === 'rear' ? 'front' : 'rear';
+      cameraBtn.textContent = currentCamera === 'rear' ? 
+        (currentLang === 'en' ? '📷 Rear' : '📷 Задня') : 
+        (currentLang === 'en' ? '📷 Front' : '📷 Передня');
+      
+      await startCamera();
+    }
+
+    // === Запуск камери ===
+    async function startCamera() {
+      try {
+        const cameraConfig = {
+          video: {
+            facingMode: currentCamera === 'rear' ? 'environment' : 'user'
+          }
+        };
+
+        videoElement = document.getElementById('video');
+        
+        const stream = await navigator.mediaDevices.getUserMedia(cameraConfig);
+        videoElement.srcObject = stream;
+        
+        window.cameraInstance = new Camera(videoElement, {
+          onFrame: async () => {
+            await hands.send({image: videoElement});
+          },
+          width: 640,
+          height: 480
+        });
+        
+        await window.cameraInstance.start();
+        
+      } catch (error) {
+        console.error('Camera error:', error);
+        status.textContent = 'Camera error: ' + error.message;
+        
+        // Спробувати з альтернативною камерою
+        currentCamera = currentCamera === 'rear' ? 'front' : 'rear';
+        if (error.name !== 'NotAllowedError') {
+          setTimeout(startCamera, 1000);
+        }
+      }
     }
 
     // === Запис відео ===
@@ -570,29 +654,21 @@
         hands.setOptions({
           maxNumHands: 1,
           modelComplexity: 1,
-          minDetectionConfidence: 0.5,
-          minTrackingConfidence: 0.5
+          minDetectionConfidence: 0.7, // Підвищено точність
+          minTrackingConfidence: 0.7
         });
 
         hands.onResults(onResults);
 
         // Запуск камери
-        videoElement = document.getElementById('video');
-        
-        const camera = new Camera(videoElement, {
-          onFrame: async () => {
-            await hands.send({image: videoElement});
-          },
-          width: 640,
-          height: 480
-        });
-        
-        await camera.start();
+        await startCamera();
 
         // Обробники подій
         langBtn.onclick = () => {
           switchLanguage(currentLang === 'en' ? 'uk' : 'en');
         };
+        
+        cameraBtn.onclick = switchCamera;
         
         recordBtn.onclick = () => {
           if (isRecording) {
