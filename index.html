@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>AR Thank You Letter</title>
+  <title>🎅 Christmas AR Letter</title>
   <style>
     * { 
       margin: 0; 
@@ -14,7 +14,7 @@
     body { 
       overflow: hidden; 
       font-family: 'Georgia', serif; 
-      background: linear-gradient(135deg, #1a1a2e, #16213e);
+      background: linear-gradient(135deg, #0c1445, #1a237e);
       color: white;
     }
     
@@ -40,58 +40,59 @@
       align-items: center;
       z-index: 100;
       font-size: 16px;
-      background: rgba(0, 0, 0, 0.6);
+      background: rgba(0, 0, 0, 0.7);
       padding: 12px 20px;
       border-radius: 15px;
       backdrop-filter: blur(10px);
-      border: 1px solid rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 215, 0, 0.3);
+      box-shadow: 0 4px 20px rgba(255, 215, 0, 0.2);
     }
     
     button {
-      background: linear-gradient(135deg, #e65c00, #F9D423);
+      background: linear-gradient(135deg, #d32f2f, #f44336);
       color: white; 
       border: none;
-      padding: 12px 24px; 
-      border-radius: 30px; 
+      padding: 12px 20px; 
+      border-radius: 25px; 
       font-weight: bold;
       font-family: 'Georgia', serif;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+      box-shadow: 0 4px 15px rgba(211, 47, 47, 0.4);
       cursor: pointer;
       transition: all 0.3s ease;
-      margin-left: 5px;
+      margin-left: 8px;
+      font-size: 14px;
     }
     
     button:hover {
       transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(230, 92, 0, 0.4);
+      box-shadow: 0 6px 20px rgba(211, 47, 47, 0.6);
     }
     
     #status { 
-      color: #ffcc80; 
-      font-size: 18px;
+      color: #ffd700; 
+      font-size: 16px;
       text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+      font-weight: bold;
     }
     
     #controls {
       display: flex;
-      gap: 10px;
+      gap: 8px;
       flex-wrap: wrap;
     }
     
     #clearBtn {
-      background: linear-gradient(135deg, #8e44ad, #9b59b6);
+      background: linear-gradient(135deg, #1976d2, #42a5f5);
     }
     
     #langBtn {
-      background: linear-gradient(135deg, #27ae60, #2ecc71);
-      font-size: 14px;
-      padding: 8px 16px;
+      background: linear-gradient(135deg, #388e3c, #4caf50);
+      padding: 10px 16px;
     }
     
     #cameraBtn {
-      background: linear-gradient(135deg, #3498db, #2980b9);
-      font-size: 14px;
-      padding: 8px 16px;
+      background: linear-gradient(135deg, #7b1fa2, #9c27b0);
+      padding: 10px 16px;
     }
     
     #instructions {
@@ -100,22 +101,24 @@
       left: 50%;
       transform: translateX(-50%);
       text-align: center;
-      background: rgba(0, 0, 0, 0.7);
+      background: rgba(0, 0, 0, 0.8);
       padding: 15px 25px;
       border-radius: 15px;
       backdrop-filter: blur(10px);
-      border: 1px solid rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 215, 0, 0.3);
       max-width: 90%;
+      box-shadow: 0 4px 20px rgba(255, 215, 0, 0.2);
     }
     
     #instructions h3 {
       margin-bottom: 8px;
-      color: #F9D423;
+      color: #ffd700;
     }
     
     #instructions p {
       margin-bottom: 5px;
       font-size: 14px;
+      color: #e3f2fd;
     }
     
     .pulse {
@@ -125,12 +128,11 @@
     @keyframes pulse {
       0% { opacity: 0.7; }
       50% { opacity: 1; }
-      100% { opacity: 0.7;
-      }
+      100% { opacity: 0.7; }
     }
     
     .success {
-      color: #2ecc71 !important;
+      color: #4caf50 !important;
     }
     
     .recording {
@@ -143,6 +145,22 @@
       70% { box-shadow: 0 0 0 10px rgba(231, 76, 60, 0); }
       100% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0); }
     }
+
+    .snowflake {
+      position: absolute;
+      color: white;
+      font-size: 20px;
+      user-select: none;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    @keyframes fall {
+      0% { transform: translateY(-100px) rotate(0deg); opacity: 0; }
+      10% { opacity: 1; }
+      90% { opacity: 1; }
+      100% { transform: translateY(100vh) rotate(360deg); opacity: 0; }
+    }
   </style>
 </head>
 <body>
@@ -150,21 +168,25 @@
     <video id="video" playsinline style="display:none;"></video>
     <canvas id="canvas"></canvas>
 
+    <!-- Сніжинки -->
+    <div id="snowflakes"></div>
+
     <div id="ui">
-      <div id="status">Point your index finger ✋</div>
+      <div id="status">🎅 Point your finger to write...</div>
       <div id="controls">
         <button id="langBtn">🇺🇦 UA</button>
-        <button id="cameraBtn">📷 Rear</button>
-        <button id="clearBtn">Clear</button>
-        <button id="recordBtn">Record Video</button>
+        <button id="cameraBtn">📷 Switch Camera</button>
+        <button id="clearBtn">✨ Clear</button>
+        <button id="recordBtn">🎥 Record</button>
       </div>
     </div>
     
     <div id="instructions">
-      <h3>How to use:</h3>
+      <h3>🎄 Magical Christmas Letter 🎄</h3>
       <p>1. Show your index finger to the camera</p>
-      <p>2. Extend your finger to start drawing in the air</p>
-      <p>3. Bend your finger to finish the stroke</p>
+      <p>2. Extend finger to write in the air ✍️</p>
+      <p>3. Bend finger to finish the stroke</p>
+      <p>Shake phone for snowstorm! ❄️</p>
     </div>
   </div>
 
@@ -172,68 +194,72 @@
   <script src="https://cdn.jsdelivr.net/npm/three@0.157.0/build/three.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.157.0/examples/js/controls/OrbitControls.js"></script>
 
+  <!-- Cannon.js -->
+  <script src="https://unpkg.com/cannon@0.20.0/build/cannon.min.js"></script>
+
   <!-- MediaPipe Hands -->
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js"></script>
 
   <script>
     // Language support
     const translations = {
       en: {
-        title: 'AR Thank You Letter',
+        title: '🎅 Christmas AR Letter',
         status: {
-          initial: 'Point your index finger ✋',
-          drawing: 'Drawing... ✍️',
-          done: 'Done! Draw more.',
-          clear: 'Text cleared! ✨',
-          recording: 'Recording... ⏺',
-          saved: 'Video saved! 🎥'
+          initial: '🎅 Point your finger to write...',
+          drawing: '✍️ Writing magical letter...',
+          done: '✨ Beautiful! Write more...',
+          clear: '🌟 Letter cleared!',
+          recording: '🔴 Recording...',
+          saved: '💫 Video saved!'
         },
         instructions: {
-          title: 'How to use:',
+          title: '🎄 Magical Christmas Letter 🎄',
           step1: '1. Show your index finger to the camera',
-          step2: '2. Extend your finger to start drawing in the air',
-          step3: '3. Bend your finger to finish the stroke'
+          step2: '2. Extend finger to write in the air ✍️',
+          step3: '3. Bend finger to finish the stroke',
+          step4: 'Shake phone for snowstorm! ❄️'
         },
         buttons: {
-          clear: 'Clear',
-          record: 'Record Video',
-          stop: 'Stop Recording',
+          clear: '✨ Clear',
+          record: '🎥 Record',
+          stop: '⏹ Stop',
           lang: '🇺🇦 UA',
-          camera: '📷 Rear'
+          camera: '📷 Switch'
         },
-        header: 'Thank You Letter'
+        header: '🎅 Christmas Letter to Santa'
       },
       uk: {
-        title: 'AR-лист подяки',
+        title: '🎅 Різдвяний AR-лист',
         status: {
-          initial: 'Наведи вказівний палець ✋',
-          drawing: 'Пишу... ✍️',
-          done: 'Готово! Напиши ще.',
-          clear: 'Текст очищено! ✨',
-          recording: 'Запис... ⏺',
-          saved: 'Відео збережено! 🎥'
+          initial: '🎅 Наведи палець щоб писати...',
+          drawing: '✍️ Пишу чарівний лист...',
+          done: '✨ Чудово! Пиши ще...',
+          clear: '🌟 Лист очищено!',
+          recording: '🔴 Запис...',
+          saved: '💫 Відео збережено!'
         },
         instructions: {
-          title: 'Як користуватися:',
+          title: '🎄 Чарівний Різдвяний Лист 🎄',
           step1: '1. Покажіть вказівний палець камері',
-          step2: '2. Витягніть палець, щоб почати писати в повітрі',
-          step3: '3. Зігніть палець, щоб закінчити напис'
+          step2: '2. Витягніть палець щоб писати ✍️',
+          step3: '3. Зігніть палець щоб закінчити',
+          step4: 'Трусіть телефоном для хуртовини! ❄️'
         },
         buttons: {
-          clear: 'Очистити',
-          record: 'Записати відео',
-          stop: 'Зупинити запис',
+          clear: '✨ Очистити',
+          record: '🎥 Запис',
+          stop: '⏹ Стоп',
           lang: '🇺🇸 EN',
-          camera: '📷 Передня'
+          camera: '📷 Камера'
         },
-        header: 'Лист Подяки'
+        header: '🎅 Лист до Санти'
       }
     };
 
     let currentLang = 'en';
-    let camera, scene, renderer, scroll, textGroup;
+    let camera, scene, renderer, letter, textGroup;
     let hands;
     let isDrawing = false;
     let currentPath = [];
@@ -242,38 +268,13 @@
     let isRecording = false;
     let fingerTrail = [];
     let videoElement;
-    let currentCamera = 'rear'; // 'rear' or 'front'
+    let currentCamera = 'environment'; // Задня камера за замовчуванням
+    let cameraStream = null;
 
-    // Language switch function
-    function switchLanguage(lang) {
-      currentLang = lang;
-      const t = translations[currentLang];
-      
-      document.title = t.title;
-      
-      // Update status
-      status.textContent = t.status.initial;
-      
-      // Update instructions
-      const inst = document.getElementById('instructions');
-      inst.innerHTML = `
-        <h3>${t.instructions.title}</h3>
-        <p>${t.instructions.step1}</p>
-        <p>${t.instructions.step2}</p>
-        <p>${t.instructions.step3}</p>
-      `;
-      
-      // Update buttons
-      clearBtn.textContent = t.buttons.clear;
-      recordBtn.textContent = isRecording ? t.buttons.stop : t.buttons.record;
-      langBtn.textContent = t.buttons.lang;
-      cameraBtn.textContent = t.buttons.camera;
-      
-      // Update header in texture
-      if (scroll) {
-        createParchment();
-      }
-    }
+    // === Сніг + Фізика ===
+    let world, snowBodies = [], snowMeshes = [];
+    let snowHeightMap = {}; // ключ: "x_z" → висота снігу
+    let shakeIntensity = 0;
 
     // === Елементи ===
     const video = document.getElementById('video');
@@ -284,13 +285,27 @@
     const langBtn = document.getElementById('langBtn');
     const cameraBtn = document.getElementById('cameraBtn');
 
+    // === Сніжинки в DOM ===
+    function createSnowflakes() {
+      const snowContainer = document.getElementById('snowflakes');
+      for (let i = 0; i < 15; i++) {
+        const snowflake = document.createElement('div');
+        snowflake.className = 'snowflake';
+        snowflake.innerHTML = '❄';
+        snowflake.style.left = Math.random() * 100 + 'vw';
+        snowflake.style.animationDelay = Math.random() * 5 + 's';
+        snowflake.style.animation = `fall ${Math.random() * 3 + 2}s linear infinite`;
+        snowContainer.appendChild(snowflake);
+      }
+    }
+
     // === Three.js ініціалізація ===
     function initThree() {
       scene = new THREE.Scene();
-      scene.background = new THREE.Color(0x000000);
+      scene.background = new THREE.Color(0x0c1445);
       
       camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 100);
-      camera.position.set(0, 0, 3);
+      camera.position.set(0, 0, 4);
 
       renderer = new THREE.WebGLRenderer({ 
         canvas: canvas, 
@@ -300,92 +315,254 @@
       });
       renderer.setSize(window.innerWidth, window.innerHeight);
       renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.shadowMap.enabled = true;
+      renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
-      // Освітлення
-      const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+      // Різдвяне освітлення
+      const ambientLight = new THREE.AmbientLight(0xffd700, 0.4);
       scene.add(ambientLight);
       
-      const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+      const directionalLight = new THREE.DirectionalLight(0xff6b6b, 0.8);
       directionalLight.position.set(5, 10, 7);
+      directionalLight.castShadow = true;
       scene.add(directionalLight);
 
-      // Створення пергаменту
-      createParchment();
+      const pointLight = new THREE.PointLight(0x4fc3f7, 0.6, 10);
+      pointLight.position.set(-3, 2, 3);
+      scene.add(pointLight);
+
+      // Фізика
+      initPhysics();
+
+      // Створення різдвяного листа
+      createChristmasLetter();
       
       // Група для тексту
       textGroup = new THREE.Group();
       scene.add(textGroup);
 
+      // Генеруємо сніжинки кожні 200 мс
+      setInterval(() => {
+        if (snowBodies.length < 80) createSnowflake();
+      }, 200);
+
       // Анімація
       animate();
     }
 
-    // === Створення пергаменту ===
-    function createParchment() {
-      // Remove old scroll if exists
-      if (scroll) scene.remove(scroll);
-      
-      const parchmentGeometry = new THREE.PlaneGeometry(2.5, 3.5);
-      const parchmentTexture = createParchmentTexture();
-      
-      const parchmentMaterial = new THREE.MeshLambertMaterial({ 
-        map: parchmentTexture,
-        transparent: true,
-        opacity: 0.95
-      });
-      
-      const parchment = new THREE.Mesh(parchmentGeometry, parchmentMaterial);
-      parchment.position.set(0, 0, -1);
-      parchment.rotation.x = -0.1;
-      scene.add(parchment);
-      
-      scroll = parchment;
+    // === Фізика ===
+    function initPhysics() {
+      world = new CANNON.World();
+      world.gravity.set(0, -2, 0);
+      world.broadphase = new CANNON.NaiveBroadphase();
+      world.solver.iterations = 10;
+
+      // Площина = лист
+      const planeShape = new CANNON.Plane();
+      const planeBody = new CANNON.Body({ mass: 0 });
+      planeBody.addShape(planeShape);
+      planeBody.quaternion.setFromEuler(-Math.PI / 2, 0, 0);
+      planeBody.position.set(0, 0, -1);
+      world.addBody(planeBody);
     }
 
-    // === Текстура пергаменту ===
-    function createParchmentTexture() {
+    // === Створення сніжинки ===
+    function createSnowflake() {
+      const x = (Math.random() - 0.5) * 3.5;
+      const z = (Math.random() - 0.5) * 2.5 - 0.5;
+      const y = 3;
+
+      // 3D сніжинка
+      const geometry = new THREE.SphereGeometry(0.02, 6, 6);
+      const material = new THREE.MeshBasicMaterial({ 
+        color: 0xffffff, 
+        transparent: true, 
+        opacity: 0.9 
+      });
+      const mesh = new THREE.Mesh(geometry, material);
+      mesh.position.set(x, y, z);
+      scene.add(mesh);
+
+      // Фізичне тіло
+      const shape = new CANNON.Sphere(0.02);
+      const body = new CANNON.Body({ mass: 0.01 });
+      body.addShape(shape);
+      body.position.set(x, y, z);
+      body.linearDamping = 0.1;
+      world.addBody(body);
+
+      snowBodies.push(body);
+      snowMeshes.push(mesh);
+    }
+
+    // === Оновлення снігу ===
+    function updateSnow() {
+      const dt = 1/60;
+      world.step(dt);
+
+      for (let i = snowBodies.length - 1; i >= 0; i--) {
+        const body = snowBodies[i];
+        const mesh = snowMeshes[i];
+
+        mesh.position.copy(body.position);
+        mesh.quaternion.copy(body.quaternion);
+
+        // Якщо сніжинка на листі
+        if (body.position.y < -0.98) {
+          const key = `${Math.round(body.position.x*10)}_${Math.round(body.position.z*10)}`;
+          snowHeightMap[key] = (snowHeightMap[key] || 0) + 0.001;
+
+          // Видаляємо з фізики, залишаємо як сніг
+          world.removeBody(body);
+          snowBodies.splice(i, 1);
+          
+          // Залишаємо mesh, але "приклеюємо" до листа
+          mesh.position.y = -0.98 + (snowHeightMap[key] || 0);
+          mesh.material.opacity = 0.7;
+          snowMeshes.splice(i, 1);
+          
+          // Додаємо до листа як сніг
+          letter.add(mesh);
+        }
+      }
+
+      // Реакція на тряску
+      if (shakeIntensity > 15) {
+        snowBodies.forEach(b => {
+          b.applyImpulse(
+            new CANNON.Vec3(
+              (Math.random()-0.5)*2,
+              Math.random()*3,
+              (Math.random()-0.5)*2
+            ), b.position);
+        });
+      }
+    }
+
+    // === Device Motion ===
+    window.addEventListener('devicemotion', e => {
+      const acc = e.accelerationIncludingGravity;
+      if (acc) {
+        shakeIntensity = Math.abs(acc.x) + Math.abs(acc.y) + Math.abs(acc.z) - 9.8;
+      }
+    });
+
+    // === Створення різдвяного листа ===
+    function createChristmasLetter() {
+      if (letter) scene.remove(letter);
+      
+      const letterGeometry = new THREE.PlaneGeometry(2.8, 3.8);
+      const letterTexture = createChristmasTexture();
+      
+      const letterMaterial = new THREE.MeshLambertMaterial({ 
+        map: letterTexture,
+        transparent: true,
+        opacity: 0.95,
+        side: THREE.DoubleSide
+      });
+      
+      letter = new THREE.Mesh(letterGeometry, letterMaterial);
+      letter.position.set(0, 0, -1);
+      letter.rotation.x = -0.1;
+      letter.castShadow = true;
+      letter.receiveShadow = true;
+      scene.add(letter);
+
+      // Додаємо різдвяні декорації
+      addChristmasDecorations();
+    }
+
+    // === Різдвяна текстура ===
+    function createChristmasTexture() {
       const t = translations[currentLang];
       const canvas = document.createElement('canvas');
-      canvas.width = 512;
-      canvas.height = 512;
+      canvas.width = 1024;
+      canvas.height = 1024;
       const ctx = canvas.getContext('2d');
       
-      // Основний колір пергаменту
-      ctx.fillStyle = '#f4e4bc';
-      ctx.fillRect(0, 0, 512, 512);
+      // Фон - різдвяний градієнт
+      const gradient = ctx.createLinearGradient(0, 0, 1024, 1024);
+      gradient.addColorStop(0, '#fff8e1');
+      gradient.addColorStop(1, '#ffecb3');
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, 1024, 1024);
       
-      // Текстура старого паперу
-      ctx.fillStyle = 'rgba(139, 69, 19, 0.05)';
-      for (let i = 0; i < 200; i++) {
-        const x = Math.random() * 512;
-        const y = Math.random() * 512;
-        const size = Math.random() * 30 + 10;
+      // Різдвяний візерунок
+      ctx.fillStyle = 'rgba(211, 47, 47, 0.1)';
+      for (let i = 0; i < 300; i++) {
+        const x = Math.random() * 1024;
+        const y = Math.random() * 1024;
+        const size = Math.random() * 40 + 10;
         ctx.beginPath();
         ctx.arc(x, y, size, 0, Math.PI * 2);
         ctx.fill();
       }
       
-      // Краї
-      ctx.strokeStyle = '#8b4513';
-      ctx.lineWidth = 15;
-      ctx.strokeRect(10, 10, 492, 492);
+      // Золоті кути
+      ctx.strokeStyle = '#ffd700';
+      ctx.lineWidth = 25;
+      ctx.strokeRect(50, 50, 924, 924);
       
       // Заголовок
-      ctx.fillStyle = '#5d2a00';
-      ctx.font = 'bold 40px Georgia';
+      ctx.fillStyle = '#d32f2f';
+      ctx.font = 'bold 60px Georgia';
       ctx.textAlign = 'center';
-      ctx.fillText(t.header, 256, 80);
+      ctx.textBaseline = 'middle';
+      ctx.fillText(t.header, 512, 120);
       
-      // Лінія під заголовком
-      ctx.beginPath();
-      ctx.moveTo(80, 100);
-      ctx.lineTo(432, 100);
-      ctx.strokeStyle = '#8b4513';
-      ctx.lineWidth = 3;
-      ctx.stroke();
-
+      // Різдвяні ілюстрації
+      drawChristmasElements(ctx);
+      
       const texture = new THREE.CanvasTexture(canvas);
+      texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
       return texture;
+    }
+
+    function drawChristmasElements(ctx) {
+      // Ялинки по боках
+      ctx.fillStyle = '#2e7d32';
+      // Ліва ялинка
+      ctx.beginPath();
+      ctx.moveTo(150, 800); ctx.lineTo(100, 600); ctx.lineTo(200, 600); ctx.closePath();
+      ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(150, 700); ctx.lineTo(80, 500); ctx.lineTo(220, 500); ctx.closePath();
+      ctx.fill();
+      
+      // Права ялинка
+      ctx.beginPath();
+      ctx.moveTo(874, 800); ctx.lineTo(824, 600); ctx.lineTo(924, 600); ctx.closePath();
+      ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(874, 700); ctx.lineTo(804, 500); ctx.lineTo(944, 500); ctx.closePath();
+      ctx.fill();
+      
+      // Різдвяні кульки
+      ctx.fillStyle = '#d32f2f'; ctx.beginPath(); ctx.arc(180, 550, 15, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#1976d2'; ctx.beginPath(); ctx.arc(120, 650, 12, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#ffd700'; ctx.beginPath(); ctx.arc(850, 580, 14, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#7b1fa2'; ctx.beginPath(); ctx.arc(900, 650, 13, 0, Math.PI * 2); ctx.fill();
+    }
+
+    function addChristmasDecorations() {
+      // Парящі сніжинки в 3D
+      for (let i = 0; i < 8; i++) {
+        const snowGeometry = new THREE.SphereGeometry(0.03, 6, 6);
+        const snowMaterial = new THREE.MeshBasicMaterial({ 
+          color: 0xffffff,
+          transparent: true,
+          opacity: 0.8
+        });
+        
+        const snowflake = new THREE.Mesh(snowGeometry, snowMaterial);
+        snowflake.position.set(
+          (Math.random() - 0.5) * 4,
+          (Math.random() - 0.5) * 3 + 1,
+          -0.5 + Math.random() * 0.5
+        );
+        
+        scene.add(snowflake);
+      }
     }
 
     // === Анімація ===
@@ -396,14 +573,22 @@
       if (fingerTrail.length > 0) {
         fingerTrail.forEach((point, index) => {
           point.material.opacity = 1 - (index / fingerTrail.length);
-          point.scale.multiplyScalar(0.95);
+          point.scale.multiplyScalar(0.92);
         });
         
-        // Видаляємо старі точки
         while (fingerTrail.length > 0 && fingerTrail[0].material.opacity < 0.1) {
           scene.remove(fingerTrail.shift());
         }
       }
+      
+      // Легке хиттання листа
+      if (letter) {
+        letter.rotation.y = Math.sin(Date.now() * 0.001) * 0.02;
+        letter.rotation.x = -0.1 + Math.sin(Date.now() * 0.0007) * 0.01;
+      }
+
+      // Оновлення снігу
+      updateSnow();
       
       renderer.render(scene, camera);
     }
@@ -415,11 +600,9 @@
       if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
         const landmarks = results.multiHandLandmarks[0];
         
-        // Вказівний палець — кінчик
         const tip = landmarks[8]; // INDEX_FINGER_TIP
-        const mcp = landmarks[5]; // INDEX_FINGER_MCP
         const pip = landmarks[6]; // INDEX_FINGER_PIP
-        const dip = landmarks[7]; // INDEX_FINGER_DIP
+        const mcp = landmarks[5]; // INDEX_FINGER_MCP
 
         // Перевірка чи палець витягнутий
         const tipToPipDist = Math.sqrt(
@@ -432,14 +615,12 @@
           Math.pow(mcp.y - pip.y, 2)
         );
 
-        // Якщо палець витягнутий - малюємо
-        const isFingerExtended = tipToPipDist > mcpToPipDist * 0.7;
+        const isFingerExtended = tipToPipDist > mcpToPipDist * 0.6;
 
-        // Перетворення координат з MediaPipe в Three.js
-        // Корекція координат для більш точної відповідності
-        const ndcX = (tip.x - 0.5) * 3;
-        const ndcY = -(tip.y - 0.5) * 2.5;
-        const vector = new THREE.Vector3(ndcX, ndcY, -0.5);
+        // Перетворення координат
+        const ndcX = (tip.x - 0.5) * 3.5;
+        const ndcY = -(tip.y - 0.5) * 2.8;
+        const vector = new THREE.Vector3(ndcX, ndcY, -0.3);
 
         if (isFingerExtended) {
           if (!isDrawing) {
@@ -450,14 +631,12 @@
           }
           
           currentPath.push(vector.clone());
-          
-          // Додаємо слід пальця
           addFingerTrail(vector.clone());
           
         } else {
           if (isDrawing) {
             isDrawing = false;
-            addTextToScroll(currentPath);
+            addTextToLetter(currentPath);
             currentPath = [];
             status.textContent = t.status.done;
             status.classList.remove('pulse');
@@ -468,7 +647,7 @@
       } else {
         if (isDrawing) {
           isDrawing = false;
-          addTextToScroll(currentPath);
+          addTextToLetter(currentPath);
           currentPath = [];
           status.classList.remove('pulse');
         }
@@ -478,11 +657,11 @@
 
     // === Додаємо слід пальця ===
     function addFingerTrail(position) {
-      const geometry = new THREE.SphereGeometry(0.03, 8, 8); // Збільшено розмір
+      const geometry = new THREE.SphereGeometry(0.04, 8, 8);
       const material = new THREE.MeshBasicMaterial({ 
-        color: 0xF9D423,
+        color: 0xffd700,
         transparent: true,
-        opacity: 0.8
+        opacity: 0.9
       });
       
       const sphere = new THREE.Mesh(geometry, material);
@@ -492,30 +671,106 @@
       fingerTrail.push(sphere);
     }
 
-    // === Додаємо текст на пергамент ===
-    function addTextToScroll(path) {
+    // === Додаємо текст на лист ===
+    function addTextToLetter(path) {
       if (path.length < 3) return;
 
-      // Використовуємо TubeGeometry для товстішої лінії
       const curve = new THREE.CatmullRomCurve3(path);
       
-      const geometry = new THREE.TubeGeometry(
-        curve,
-        path.length * 2, // Кількість сегментів
-        0.03, // Радіус трубки - збільшено для товщої лінії
-        8, // Кількість радіальних сегментів
-        false
-      );
-      
+      const geometry = new THREE.TubeGeometry(curve, path.length * 2, 0.035, 8, false);
       const material = new THREE.MeshBasicMaterial({ 
-        color: 0x5d2a00
+        color: 0xc62828 // Різдвяний червоний
       });
       
       const tube = new THREE.Mesh(geometry, material);
       textGroup.add(tube);
+
+      // Додаємо золотий блиск
+      const glowGeometry = new THREE.TubeGeometry(curve, path.length * 2, 0.045, 8, false);
+      const glowMaterial = new THREE.MeshBasicMaterial({ 
+        color: 0xffd700,
+        transparent: true,
+        opacity: 0.3
+      });
+      
+      const glow = new THREE.Mesh(glowGeometry, glowMaterial);
+      textGroup.add(glow);
+
+      // Додаємо сніг під лінією письма
+      path.forEach((point, i) => {
+        if (i % 3 === 0) { // кожна 3-я точка
+          setTimeout(() => {
+            const snow = new THREE.Mesh(
+              new THREE.SphereGeometry(0.015, 6, 6),
+              new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.8 })
+            );
+            snow.position.copy(point);
+            snow.position.y += 0.02;
+            letter.add(snow);
+
+            // Зникає через 5 сек
+            setTimeout(() => letter.remove(snow), 5000);
+          }, i * 50);
+        }
+      });
     }
 
-    // === Очищення тексту ===
+    // === Перемикання камери ===
+    async function switchCamera() {
+      if (cameraStream) {
+        cameraStream.getTracks().forEach(track => track.stop());
+      }
+      
+      currentCamera = currentCamera === 'environment' ? 'user' : 'environment';
+      await startCamera();
+    }
+
+    // === Запуск камери ===
+    async function startCamera() {
+      try {
+        videoElement = document.getElementById('video');
+        
+        // Спершу намагаємось отримати задню камеру
+        let constraints = {
+          video: {
+            facingMode: currentCamera,
+            width: { ideal: 1280 },
+            height: { ideal: 720 }
+          }
+        };
+
+        cameraStream = await navigator.mediaDevices.getUserMedia(constraints);
+        videoElement.srcObject = cameraStream;
+        
+        // Запускаємо MediaPipe
+        if (window.camera) {
+          window.camera.stop();
+        }
+        
+        window.camera = new Camera(videoElement, {
+          onFrame: async () => {
+            await hands.send({image: videoElement});
+          },
+          width: 640,
+          height: 480
+        });
+        
+        await window.camera.start();
+        
+        console.log('Camera started successfully:', currentCamera);
+        
+      } catch (error) {
+        console.error('Camera error:', error);
+        
+        // Якщо задня камера не працює, пробуємо передню
+        if (currentCamera === 'environment') {
+          currentCamera = 'user';
+          setTimeout(startCamera, 500);
+        }
+      }
+    }
+
+    // === Інші функції ===
     function clearText() {
       const t = translations[currentLang];
       while (textGroup.children.length > 0) {
@@ -529,59 +784,77 @@
       }, 2000);
     }
 
-    // === Перемикання камери ===
-    async function switchCamera() {
+    function switchLanguage(lang) {
+      currentLang = lang;
       const t = translations[currentLang];
       
-      if (window.cameraInstance) {
-        await window.cameraInstance.stop();
-      }
+      document.title = t.title;
+      status.textContent = t.status.initial;
       
-      currentCamera = currentCamera === 'rear' ? 'front' : 'rear';
-      cameraBtn.textContent = currentCamera === 'rear' ? 
-        (currentLang === 'en' ? '📷 Rear' : '📷 Задня') : 
-        (currentLang === 'en' ? '📷 Front' : '📷 Передня');
+      document.getElementById('instructions').innerHTML = `
+        <h3>${t.instructions.title}</h3>
+        <p>${t.instructions.step1}</p>
+        <p>${t.instructions.step2}</p>
+        <p>${t.instructions.step3}</p>
+        <p>${t.instructions.step4}</p>
+      `;
       
-      await startCamera();
+      clearBtn.textContent = t.buttons.clear;
+      recordBtn.textContent = isRecording ? t.buttons.stop : t.buttons.record;
+      langBtn.textContent = t.buttons.lang;
+      cameraBtn.textContent = t.buttons.camera;
+      
+      createChristmasLetter();
     }
 
-    // === Запуск камери ===
-    async function startCamera() {
+    // === Ініціалізація ===
+    async function initializeApp() {
       try {
-        const cameraConfig = {
-          video: {
-            facingMode: currentCamera === 'rear' ? 'environment' : 'user'
+        createSnowflakes();
+        initThree();
+
+        // MediaPipe Hands
+        hands = new Hands({
+          locateFile: (file) => {
+            return `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`;
           }
+        });
+
+        hands.setOptions({
+          maxNumHands: 1,
+          modelComplexity: 1,
+          minDetectionConfidence: 0.7,
+          minTrackingConfidence: 0.7
+        });
+
+        hands.onResults(onResults);
+
+        // Запускаємо камеру
+        await startCamera();
+
+        // Обробники подій
+        langBtn.onclick = () => switchLanguage(currentLang === 'en' ? 'uk' : 'en');
+        cameraBtn.onclick = switchCamera;
+        clearBtn.onclick = clearText;
+        
+        recordBtn.onclick = () => {
+          if (isRecording) stopRecording();
+          else startRecording();
         };
 
-        videoElement = document.getElementById('video');
-        
-        const stream = await navigator.mediaDevices.getUserMedia(cameraConfig);
-        videoElement.srcObject = stream;
-        
-        window.cameraInstance = new Camera(videoElement, {
-          onFrame: async () => {
-            await hands.send({image: videoElement});
-          },
-          width: 640,
-          height: 480
+        window.addEventListener('resize', () => {
+          camera.aspect = window.innerWidth / window.innerHeight;
+          camera.updateProjectionMatrix();
+          renderer.setSize(window.innerWidth, window.innerHeight);
         });
-        
-        await window.cameraInstance.start();
-        
+
       } catch (error) {
-        console.error('Camera error:', error);
-        status.textContent = 'Camera error: ' + error.message;
-        
-        // Спробувати з альтернативною камерою
-        currentCamera = currentCamera === 'rear' ? 'front' : 'rear';
-        if (error.name !== 'NotAllowedError') {
-          setTimeout(startCamera, 1000);
-        }
+        console.error('Initialization error:', error);
+        status.textContent = 'Error: ' + error.message;
       }
     }
 
-    // === Запис відео ===
+    // Функції запису відео
     function startRecording() {
       const t = translations[currentLang];
       recordedChunks = [];
@@ -593,9 +866,7 @@
         });
 
         mediaRecorder.ondataavailable = e => {
-          if (e.data.size > 0) {
-            recordedChunks.push(e.data);
-          }
+          if (e.data.size > 0) recordedChunks.push(e.data);
         };
         
         mediaRecorder.onstop = () => {
@@ -603,18 +874,13 @@
           const url = URL.createObjectURL(blob);
           const a = document.createElement('a');
           a.href = url;
-          a.download = `thankyou-letter-${new Date().getTime()}.webm`;
-          document.body.appendChild(a);
+          a.download = `christmas-letter-${Date.now()}.webm`;
           a.click();
-          document.body.removeChild(a);
           URL.revokeObjectURL(url);
           
           status.textContent = t.status.saved;
           status.classList.add('success');
-          setTimeout(() => {
-            status.textContent = t.status.initial;
-            status.classList.remove('success');
-          }, 3000);
+          setTimeout(() => status.textContent = t.status.initial, 3000);
         };
 
         mediaRecorder.start();
@@ -623,79 +889,18 @@
         recordBtn.classList.add('recording');
         status.textContent = t.status.recording;
       } catch (error) {
-        console.error('Recording error:', error);
         status.textContent = 'Recording not supported';
       }
     }
 
     function stopRecording() {
       const t = translations[currentLang];
-      if (mediaRecorder && mediaRecorder.state !== 'inactive') {
-        mediaRecorder.stop();
-      }
+      if (mediaRecorder) mediaRecorder.stop();
       isRecording = false;
       recordBtn.textContent = t.buttons.record;
       recordBtn.classList.remove('recording');
     }
 
-    // === Ініціалізація ===
-    async function initializeApp() {
-      try {
-        // Ініціалізація Three.js
-        initThree();
-
-        // Ініціалізація MediaPipe Hands
-        hands = new Hands({
-          locateFile: (file) => {
-            return `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`;
-          }
-        });
-
-        hands.setOptions({
-          maxNumHands: 1,
-          modelComplexity: 1,
-          minDetectionConfidence: 0.7, // Підвищено точність
-          minTrackingConfidence: 0.7
-        });
-
-        hands.onResults(onResults);
-
-        // Запуск камери
-        await startCamera();
-
-        // Обробники подій
-        langBtn.onclick = () => {
-          switchLanguage(currentLang === 'en' ? 'uk' : 'en');
-        };
-        
-        cameraBtn.onclick = switchCamera;
-        
-        recordBtn.onclick = () => {
-          if (isRecording) {
-            stopRecording();
-          } else {
-            startRecording();
-          }
-        };
-        
-        clearBtn.onclick = clearText;
-
-        // Обробник зміни розміру вікна
-        window.addEventListener('resize', () => {
-          camera.aspect = window.innerWidth / window.innerHeight;
-          camera.updateProjectionMatrix();
-          renderer.setSize(window.innerWidth, window.innerHeight);
-        });
-
-        console.log('App initialized successfully');
-
-      } catch (error) {
-        console.error('Initialization error:', error);
-        status.textContent = 'Error: ' + error.message;
-      }
-    }
-
-    // Запуск додатку
     window.addEventListener('load', initializeApp);
   </script>
 </body>
