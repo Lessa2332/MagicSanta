@@ -1,924 +1,602 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="uk">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>🎅 Christmas AR Letter</title>
-  <style>
-    * { 
-      margin: 0; 
-      padding: 0; 
-      box-sizing: border-box; 
-    }
-    
-    body { 
-      overflow: hidden; 
-      font-family: 'Georgia', serif; 
-      background: linear-gradient(135deg, #0c1445, #1a237e);
-      color: white;
-    }
-    
-    #container { 
-      position: relative; 
-      width: 100vw; 
-      height: 100vh; 
-    }
-    
-    canvas { 
-      display: block; 
-      width: 100%;
-      height: 100%;
-    }
-    
-    #ui {
-      position: absolute; 
-      top: 20px; 
-      left: 20px; 
-      right: 20px;
-      display: flex; 
-      justify-content: space-between; 
-      align-items: center;
-      z-index: 100;
-      font-size: 16px;
-      background: rgba(0, 0, 0, 0.7);
-      padding: 12px 20px;
-      border-radius: 15px;
-      backdrop-filter: blur(10px);
-      border: 1px solid rgba(255, 215, 0, 0.3);
-      box-shadow: 0 4px 20px rgba(255, 215, 0, 0.2);
-    }
-    
-    button {
-      background: linear-gradient(135deg, #d32f2f, #f44336);
-      color: white; 
-      border: none;
-      padding: 12px 20px; 
-      border-radius: 25px; 
-      font-weight: bold;
-      font-family: 'Georgia', serif;
-      box-shadow: 0 4px 15px rgba(211, 47, 47, 0.4);
-      cursor: pointer;
-      transition: all 0.3s ease;
-      margin-left: 8px;
-      font-size: 14px;
-    }
-    
-    button:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(211, 47, 47, 0.6);
-    }
-    
-    #status { 
-      color: #ffd700; 
-      font-size: 16px;
-      text-shadow: 0 2px 4px rgba(0,0,0,0.5);
-      font-weight: bold;
-    }
-    
-    #controls {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-    
-    #clearBtn {
-      background: linear-gradient(135deg, #1976d2, #42a5f5);
-    }
-    
-    #langBtn {
-      background: linear-gradient(135deg, #388e3c, #4caf50);
-      padding: 10px 16px;
-    }
-    
-    #cameraBtn {
-      background: linear-gradient(135deg, #7b1fa2, #9c27b0);
-      padding: 10px 16px;
-    }
-    
-    #instructions {
-      position: absolute;
-      bottom: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      text-align: center;
-      background: rgba(0, 0, 0, 0.8);
-      padding: 15px 25px;
-      border-radius: 15px;
-      backdrop-filter: blur(10px);
-      border: 1px solid rgba(255, 215, 0, 0.3);
-      max-width: 90%;
-      box-shadow: 0 4px 20px rgba(255, 215, 0, 0.2);
-    }
-    
-    #instructions h3 {
-      margin-bottom: 8px;
-      color: #ffd700;
-    }
-    
-    #instructions p {
-      margin-bottom: 5px;
-      font-size: 14px;
-      color: #e3f2fd;
-    }
-    
-    .pulse {
-      animation: pulse 2s infinite;
-    }
-    
-    @keyframes pulse {
-      0% { opacity: 0.7; }
-      50% { opacity: 1; }
-      100% { opacity: 0.7; }
-    }
-    
-    .success {
-      color: #4caf50 !important;
-    }
-    
-    .recording {
-      background: linear-gradient(135deg, #e74c3c, #c0392b) !important;
-      animation: recordingPulse 1.5s infinite;
-    }
-    
-    @keyframes recordingPulse {
-      0% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.7); }
-      70% { box-shadow: 0 0 0 10px rgba(231, 76, 60, 0); }
-      100% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0); }
-    }
-
-    .snowflake {
-      position: absolute;
-      color: white;
-      font-size: 20px;
-      user-select: none;
-      pointer-events: none;
-      z-index: 1;
-    }
-
-    @keyframes fall {
-      0% { transform: translateY(-100px) rotate(0deg); opacity: 0; }
-      10% { opacity: 1; }
-      90% { opacity: 1; }
-      100% { transform: translateY(100vh) rotate(360deg); opacity: 0; }
-    }
-
-    #cameraWarning {
-      position: absolute;
-      top: 80px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: rgba(255, 193, 7, 0.9);
-      color: #000;
-      padding: 10px 20px;
-      border-radius: 10px;
-      font-size: 14px;
-      z-index: 101;
-      display: none;
-    }
-
-    #ar-container {
-      width: 100vw;
-      height: 100vh;
-      position: absolute;
-      top: 0;
-      left: 0;
-      z-index: 0;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Новорічний AR Сніг</title>
+    <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
+    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Arial Rounded MT Bold', 'Arial', sans-serif;
+            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
+            color: white;
+            overflow: hidden;
+            height: 100vh;
+        }
+        
+        .container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            position: relative;
+        }
+        
+        .header {
+            text-align: center;
+            padding: 15px;
+            background: rgba(0, 30, 60, 0.7);
+            border-bottom: 2px solid #4dabf5;
+            z-index: 10;
+        }
+        
+        h1 {
+            font-size: 1.8rem;
+            margin-bottom: 5px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+            color: #e1f5fe;
+        }
+        
+        .subtitle {
+            font-size: 1rem;
+            opacity: 0.9;
+        }
+        
+        .ar-container {
+            flex-grow: 1;
+            position: relative;
+        }
+        
+        .controls {
+            position: absolute;
+            bottom: 20px;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            z-index: 100;
+            padding: 0 15px;
+        }
+        
+        .control-btn {
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            border-radius: 50px;
+            padding: 12px 20px;
+            font-size: 16px;
+            font-weight: bold;
+            color: #0066cc;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+        }
+        
+        .control-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
+        }
+        
+        .control-btn:active {
+            transform: translateY(1px);
+        }
+        
+        .snow-counter {
+            position: absolute;
+            top: 100px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 12px 18px;
+            border-radius: 20px;
+            z-index: 100;
+            font-weight: bold;
+            color: #0066cc;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .instructions {
+            position: absolute;
+            top: 100px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 15px;
+            border-radius: 15px;
+            z-index: 100;
+            max-width: 250px;
+            font-size: 14px;
+            line-height: 1.4;
+            border-left: 4px solid #4dabf5;
+        }
+        
+        .instructions h3 {
+            margin-bottom: 8px;
+            color: #4dabf5;
+        }
+        
+        .instructions ul {
+            padding-left: 20px;
+        }
+        
+        .instructions li {
+            margin-bottom: 6px;
+        }
+        
+        .hand-cursor {
+            position: fixed;
+            width: 60px;
+            height: 60px;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.9) 0%, rgba(200, 230, 255, 0.5) 70%, transparent 90%);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 1000;
+            transform: translate(-50%, -50%);
+            display: none;
+            box-shadow: 0 0 15px rgba(100, 180, 255, 0.7);
+            border: 2px solid rgba(255, 255, 255, 0.8);
+        }
+        
+        .loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 20, 40, 0.9);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+            color: white;
+            font-size: 1.5rem;
+        }
+        
+        .snowflake {
+            position: absolute;
+            color: white;
+            font-size: 1.5rem;
+            user-select: none;
+            pointer-events: none;
+            z-index: 1;
+            text-shadow: 0 0 5px rgba(255, 255, 255, 0.7);
+        }
+        
+        .message {
+            position: absolute;
+            bottom: 100px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 10px;
+            margin: 0 20px;
+            border-radius: 10px;
+            z-index: 100;
+            font-size: 14px;
+            display: none;
+        }
+        
+        .footer {
+            position: absolute;
+            bottom: 10px;
+            width: 100%;
+            text-align: center;
+            font-size: 12px;
+            opacity: 0.7;
+            z-index: 10;
+        }
+    </style>
 </head>
 <body>
-  <div id="container">
-    <video id="video" playsinline style="display:none;"></video>
-    <canvas id="canvas"></canvas>
-
-    <!-- MindAR Canvas -->
-    <div id="ar-container"></div>
-
-    <!-- Сніжинки -->
-    <div id="snowflakes"></div>
-
-    <div id="cameraWarning" role="alert"></div>
-
-    <div id="ui">
-      <div id="status">🎅 Point camera at surface & finger to write...</div>
-      <div id="controls">
-        <button id="langBtn">🇺🇦 UA</button>
-        <button id="cameraBtn">📷 Switch Camera</button>
-        <button id="clearBtn">✨ Clear</button>
-        <button id="recordBtn">🎥 Record</button>
-      </div>
+    <div class="container">
+        <div class="header">
+            <h1>🎄 Новорічний AR Сніг 🎅</h1>
+            <p class="subtitle">Наведіть камеру на стіл або рівну поверхню</p>
+        </div>
+        
+        <div class="snow-counter">
+            <span>⛄</span>
+            <span id="snowCount">0</span>
+        </div>
+        
+        <div class="instructions">
+            <h3>Як грати:</h3>
+            <ul>
+                <li>Торкайтеся екрану, щоб збирати сніг</li>
+                <li>Трясіть телефон для створення хуртовини</li>
+                <li>Подвійне торкання кидає сніжок</li>
+                <li>Сніг накопичується на поверхні</li>
+            </ul>
+        </div>
+        
+        <div class="ar-container">
+            <a-scene 
+                embedded 
+                arjs="sourceType: webcam; debugUIEnabled: false;"
+                renderer="logarithmicDepthBuffer: true;"
+                vr-mode-ui="enabled: false">
+                
+                <!-- AR маркер для поверхні -->
+                <a-marker preset="hiro">
+                    <a-entity id="snow-scene"></a-entity>
+                </a-marker>
+                
+                <!-- Камера -->
+                <a-entity camera></a-entity>
+            </a-scene>
+            
+            <div class="hand-cursor" id="handCursor"></div>
+        </div>
+        
+        <div class="controls">
+            <button class="control-btn" id="snowballBtn">
+                <span>❄️</span> Кинути сніжок
+            </button>
+            <button class="control-btn" id="stormBtn">
+                <span>🌬️</span> Створити хуртовину
+            </button>
+        </div>
+        
+        <div class="message" id="message"></div>
+        
+        <div class="footer">
+            Рухайте телефоном, щоб побачити більше снігу!
+        </div>
     </div>
     
-    <div id="instructions">
-      <h3>🎄 Magical Christmas AR Letter 🎄</h3>
-      <p>1. Point camera at flat surface (table/floor)</p>
-      <p>2. Show your index finger to the camera</p>
-      <p>3. Extend finger to write in the air ✍️</p>
-      <p>4. Bend finger to finish the stroke</p>
-      <p>Shake phone for snowstorm! ❄️</p>
+    <div class="loading" id="loading">
+        <h2>Завантаження новорічного дива...</h2>
+        <p>Дозвольте доступ до камери, коли вас попросять</p>
     </div>
-  </div>
 
-  <!-- MindAR + Three.js -->
-  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.3/dist/mindar-image.prod.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.3/dist/mindar-three.prod.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.min.js"></script>
-
-  <!-- MediaPipe Hands -->
-  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
-
-  <script>
-    // Language support
-    const translations = {
-      en: {
-        title: '🎅 Christmas AR Letter',
-        status: {
-          initial: '🎅 Point camera at surface & finger to write...',
-          drawing: '✍️ Writing magical letter...',
-          done: '✨ Beautiful! Write more...',
-          clear: '🌟 Letter cleared!',
-          recording: '🔴 Recording...',
-          saved: '💫 Video saved!'
-        },
-        instructions: {
-          title: '🎄 Magical Christmas AR Letter 🎄',
-          step1: '1. Point camera at flat surface (table/floor)',
-          step2: '2. Show your index finger to the camera',
-          step3: '3. Extend finger to write in the air ✍️',
-          step4: '4. Bend finger to finish the stroke',
-          step5: 'Shake phone for snowstorm! ❄️'
-        },
-        buttons: {
-          clear: '✨ Clear',
-          record: '🎥 Record',
-          stop: '⏹ Stop',
-          lang: '🇺🇦 UA',
-          camera: '📷 Switch Camera'
-        },
-        header: '🎅 Christmas Letter to Santa',
-        cameraWarning: '⚠️ Rear camera not available. Using front camera for hand tracking.'
-      },
-      uk: {
-        title: '🎅 Різдвяний AR-лист',
-        status: {
-          initial: '🎅 Наведи камеру на поверхню & палець для письма...',
-          drawing: '✍️ Пишу чарівний лист...',
-          done: '✨ Чудово! Пиши ще...',
-          clear: '🌟 Лист очищено!',
-          recording: '🔴 Запис...',
-          saved: '💫 Відео збережено!'
-        },
-        instructions: {
-          title: '🎄 Чарівний Різдвяний AR Лист 🎄',
-          step1: '1. Наведіть камеру на рівну поверхню (стіл/підлогу)',
-          step2: '2. Покажіть вказівний палець камері',
-          step3: '3. Витягніть палець щоб писати ✍️',
-          step4: '4. Зігніть палець щоб закінчити',
-          step5: 'Трусіть телефоном для хуртовини! ❄️'
-        },
-        buttons: {
-          clear: '✨ Очистити',
-          record: '🎥 Запис',
-          stop: '⏹ Стоп',
-          lang: '🇺🇸 EN',
-          camera: '📷 Перемкнути Камеру'
-        },
-        header: '🎅 Лист до Санти',
-        cameraWarning: '⚠️ Задня камера недоступна. Використовується фронтальна для трекінгу руки.'
-      }
-    };
-
-    let currentLang = 'en';
-    let mindarThree, renderer, scene, camera;
-    let letter, textGroup;
-    let hands;
-    let isDrawing = false;
-    let currentPath = [];
-    let recordedChunks = [];
-    let mediaRecorder;
-    let isRecording = false;
-    let fingerTrail = [];
-    let videoElement;
-    let currentCamera = 'environment';
-    let cameraStream = null;
-    let cameraWarningShown = false;
-
-    // Snow simulation
-    let snowPositions = new Float32Array(50 * 3);
-    let snowVelocities = new Float32Array(50 * 3);
-    let snowActive = new Uint8Array(50);
-    let snowCount = 0;
-    let snowGeometry, snowParticles;
-    let snowHeightMap = {};
-    let shakeIntensity = 0;
-    let physicsFrameCounter = 0;
-
-    // Elements
-    const video = document.getElementById('video');
-    const canvas = document.getElementById('canvas');
-    const arContainer = document.getElementById('ar-container');
-    const status = document.getElementById('status');
-    const recordBtn = document.getElementById('recordBtn');
-    const clearBtn = document.getElementById('clearBtn');
-    const langBtn = document.getElementById('langBtn');
-    const cameraBtn = document.getElementById('cameraBtn');
-    const cameraWarning = document.getElementById('cameraWarning');
-
-    // Snowflakes in DOM
-    function createSnowflakes() {
-      const snowContainer = document.getElementById('snowflakes');
-      for (let i = 0; i < 15; i++) {
-        const snowflake = document.createElement('div');
-        snowflake.className = 'snowflake';
-        snowflake.innerHTML = '❄';
-        snowflake.style.left = Math.random() * 100 + 'vw';
-        snowflake.style.animationDelay = Math.random() * 5 + 's';
-        snowflake.style.animation = `fall ${Math.random() * 3 + 2}s linear infinite`;
-        snowContainer.appendChild(snowflake);
-      }
-    }
-
-    // MindAR + Three.js initialization
-    function initAR() {
-      mindarThree = new MindARThree({
-        container: arContainer,
-        maxTrack: 1
-      });
-
-      const { renderer: r, scene: s, camera: c } = mindarThree;
-      renderer = r;
-      scene = s;
-      camera = c;
-
-      renderer.setPixelRatio(window.devicePixelRatio);
-      renderer.setSize(window.innerWidth, window.innerHeight);
-
-      // Lighting
-      const ambientLight = new THREE.AmbientLight(0xffd700, 0.4);
-      scene.add(ambientLight);
-      
-      const directionalLight = new THREE.DirectionalLight(0xff6b6b, 0.8);
-      directionalLight.position.set(5, 10, 7);
-      scene.add(directionalLight);
-
-      // Snow particles
-      initSnowParticles();
-
-      // Christmas letter
-      createChristmasLetter();
-
-      textGroup = new THREE.Group();
-      scene.add(textGroup);
-
-      // Snow spawn
-      setInterval(() => {
-        if (snowCount < 50) spawnSnowflake();
-      }, 300);
-
-      // Start AR
-      mindarThree.start().then(() => {
-        renderer.setAnimationLoop(() => {
-          updateSnow();
-          animate();
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const scene = document.querySelector('#snow-scene');
+            const loadingScreen = document.getElementById('loading');
+            const snowCountElement = document.getElementById('snowCount');
+            const handCursor = document.getElementById('handCursor');
+            const snowballBtn = document.getElementById('snowballBtn');
+            const stormBtn = document.getElementById('stormBtn');
+            const messageElement = document.getElementById('message');
+            
+            let snowSystem;
+            let collectedSnow = 0;
+            let isStormActive = false;
+            
+            // Приховуємо екран завантаження, коли сцена готова
+            scene.addEventListener('loaded', function() {
+                setTimeout(() => {
+                    loadingScreen.style.display = 'none';
+                    showMessage("Знайдіть поверхню за допомогою маркера");
+                }, 2000);
+                
+                initSnowSystem();
+            });
+            
+            function initSnowSystem() {
+                // Створення снігової системи
+                createFallingSnow();
+                setupInteractions();
+                
+                // Запуск анімації
+                animate();
+            }
+            
+            function createFallingSnow() {
+                // Створення падаючих сніжинок на передньому плані
+                for (let i = 0; i < 50; i++) {
+                    createSnowflake();
+                }
+            }
+            
+            function createSnowflake() {
+                const snowflake = document.createElement('div');
+                snowflake.className = 'snowflake';
+                snowflake.innerHTML = '❄';
+                snowflake.style.left = Math.random() * 100 + 'vw';
+                snowflake.style.fontSize = (Math.random() * 10 + 10) + 'px';
+                snowflake.style.opacity = Math.random() * 0.5 + 0.5;
+                
+                document.querySelector('.ar-container').appendChild(snowflake);
+                
+                // Анімація падіння сніжинки
+                const duration = Math.random() * 10 + 10;
+                const delay = Math.random() * 5;
+                
+                snowflake.animate([
+                    { transform: 'translateY(-100px) rotate(0deg)', opacity: 0 },
+                    { transform: `translateY(${window.innerHeight}px) rotate(360deg)`, opacity: 0.7 }
+                ], {
+                    duration: duration * 1000,
+                    delay: delay * 1000,
+                    iterations: Infinity
+                });
+                
+                // Горизонтальний рух
+                snowflake.animate([
+                    { transform: 'translateX(0px)' },
+                    { transform: 'translateX(50px)' },
+                    { transform: 'translateX(-50px)' },
+                    { transform: 'translateX(0px)' }
+                ], {
+                    duration: (Math.random() * 10 + 10) * 1000,
+                    iterations: Infinity,
+                    easing: 'ease-in-out'
+                });
+            }
+            
+            function setupInteractions() {
+                // Відстеження торкань для збирання снігу
+                document.addEventListener('touchstart', (e) => {
+                    handCursor.style.display = 'block';
+                    handCursor.style.left = e.touches[0].clientX + 'px';
+                    handCursor.style.top = e.touches[0].clientY + 'px';
+                    
+                    collectSnow(e.touches[0].clientX, e.touches[0].clientY);
+                });
+                
+                document.addEventListener('touchmove', (e) => {
+                    handCursor.style.left = e.touches[0].clientX + 'px';
+                    handCursor.style.top = e.touches[0].clientY + 'px';
+                    
+                    collectSnow(e.touches[0].clientX, e.touches[0].clientY);
+                });
+                
+                document.addEventListener('touchend', () => {
+                    handCursor.style.display = 'none';
+                });
+                
+                // Подвійне торкання для кидання сніжка
+                let lastTouch = 0;
+                document.addEventListener('touchend', (e) => {
+                    const currentTime = new Date().getTime();
+                    const tapLength = currentTime - lastTouch;
+                    
+                    if (tapLength < 500 && tapLength > 0) {
+                        throwSnowball();
+                    }
+                    
+                    lastTouch = currentTime;
+                });
+                
+                // Кнопка кидання сніжка
+                snowballBtn.addEventListener('click', throwSnowball);
+                
+                // Кнопка створення хуртовини
+                stormBtn.addEventListener('click', startSnowStorm);
+            }
+            
+            function collectSnow(x, y) {
+                // Випадковий шанс зібрати сніг
+                if (Math.random() > 0.7) {
+                    collectedSnow++;
+                    snowCountElement.textContent = collectedSnow;
+                    
+                    // Створення ефекту збирання снігу
+                    createCollectionEffect(x, y);
+                    
+                    // Випадкове відтворення звуку (імітація)
+                    if (Math.random() > 0.8) {
+                        playCollectSound();
+                    }
+                }
+            }
+            
+            function createCollectionEffect(x, y) {
+                const effect = document.createElement('div');
+                effect.style.position = 'fixed';
+                effect.style.left = (x - 15) + 'px';
+                effect.style.top = (y - 15) + 'px';
+                effect.style.width = '30px';
+                effect.style.height = '30px';
+                effect.style.background = 'radial-gradient(circle, rgba(255,255,255,0.9) 0%, transparent 70%)';
+                effect.style.borderRadius = '50%';
+                effect.style.pointerEvents = 'none';
+                effect.style.zIndex = '100';
+                
+                document.body.appendChild(effect);
+                
+                // Анімація зникнення
+                effect.animate([
+                    { transform: 'scale(1)', opacity: 1 },
+                    { transform: 'scale(2)', opacity: 0 }
+                ], {
+                    duration: 500,
+                    easing: 'ease-out'
+                });
+                
+                // Видалення ефекту після анімації
+                setTimeout(() => {
+                    document.body.removeChild(effect);
+                }, 500);
+            }
+            
+            function throwSnowball() {
+                if (collectedSnow >= 3) {
+                    collectedSnow -= 3;
+                    snowCountElement.textContent = collectedSnow;
+                    
+                    showMessage("Сніжок кинуто! ❄️");
+                    
+                    // Імітація звуку кидання сніжка
+                    playThrowSound();
+                    
+                    // Створення ефекту сніжка
+                    createSnowballEffect();
+                } else {
+                    showMessage("Недостатньо снігу для сніжка! Зберіть більше.");
+                }
+            }
+            
+            function createSnowballEffect() {
+                const snowball = document.createElement('div');
+                snowball.style.position = 'fixed';
+                snowball.style.left = '50%';
+                snowball.style.bottom = '120px';
+                snowball.style.width = '40px';
+                snowball.style.height = '40px';
+                snowball.style.background = 'radial-gradient(circle, white 0%, #e0f0ff 100%)';
+                snowball.style.borderRadius = '50%';
+                snowball.style.boxShadow = '0 0 10px rgba(255, 255, 255, 0.7)';
+                snowball.style.pointerEvents = 'none';
+                snowball.style.zIndex = '100';
+                snowball.style.transform = 'translateX(-50%)';
+                
+                document.body.appendChild(snowball);
+                
+                // Анімація кидання сніжка
+                snowball.animate([
+                    { transform: 'translateX(-50%) translateY(0)', opacity: 1 },
+                    { transform: 'translateX(-50%) translateY(-300px)', opacity: 0 }
+                ], {
+                    duration: 1000,
+                    easing: 'ease-out'
+                });
+                
+                // Видалення сніжка після анімації
+                setTimeout(() => {
+                    document.body.removeChild(snowball);
+                }, 1000);
+            }
+            
+            function startSnowStorm() {
+                if (isStormActive) return;
+                
+                isStormActive = true;
+                showMessage("Хуртовина! 🌬️");
+                
+                // Додаткові сніжинки під час хуртовини
+                for (let i = 0; i < 30; i++) {
+                    setTimeout(() => createSnowflake(), i * 100);
+                }
+                
+                // Імітація звуку хуртовини
+                playStormSound();
+                
+                // Закінчення хуртовини через 3 секунди
+                setTimeout(() => {
+                    isStormActive = false;
+                }, 3000);
+            }
+            
+            function playCollectSound() {
+                // Імітація звуку збирання
+                try {
+                    const context = new (window.AudioContext || window.webkitAudioContext)();
+                    const oscillator = context.createOscillator();
+                    const gainNode = context.createGain();
+                    
+                    oscillator.connect(gainNode);
+                    gainNode.connect(context.destination);
+                    
+                    oscillator.frequency.value = 800;
+                    oscillator.type = 'sine';
+                    
+                    gainNode.gain.setValueAtTime(0.3, context.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, context.currentTime + 0.2);
+                    
+                    oscillator.start(context.currentTime);
+                    oscillator.stop(context.currentTime + 0.2);
+                } catch (e) {
+                    console.log("Аудіо не підтримується");
+                }
+            }
+            
+            function playThrowSound() {
+                // Імітація звуку кидання сніжка
+                try {
+                    const context = new (window.AudioContext || window.webkitAudioContext)();
+                    const oscillator = context.createOscillator();
+                    const gainNode = context.createGain();
+                    
+                    oscillator.connect(gainNode);
+                    gainNode.connect(context.destination);
+                    
+                    oscillator.frequency.value = 300;
+                    oscillator.type = 'sine';
+                    
+                    gainNode.gain.setValueAtTime(0.5, context.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, context.currentTime + 0.5);
+                    
+                    oscillator.start(context.currentTime);
+                    oscillator.stop(context.currentTime + 0.5);
+                } catch (e) {
+                    console.log("Аудіо не підтримується");
+                }
+            }
+            
+            function playStormSound() {
+                // Імітація звуку хуртовини
+                try {
+                    const context = new (window.AudioContext || window.webkitAudioContext)();
+                    const oscillator = context.createOscillator();
+                    const gainNode = context.createGain();
+                    
+                    oscillator.connect(gainNode);
+                    gainNode.connect(context.destination);
+                    
+                    oscillator.frequency.value = 200;
+                    oscillator.type = 'sawtooth';
+                    
+                    gainNode.gain.setValueAtTime(0.2, context.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, context.currentTime + 3);
+                    
+                    oscillator.start(context.currentTime);
+                    oscillator.stop(context.currentTime + 3);
+                } catch (e) {
+                    console.log("Аудіо не підтримується");
+                }
+            }
+            
+            function showMessage(text) {
+                messageElement.textContent = text;
+                messageElement.style.display = 'block';
+                
+                setTimeout(() => {
+                    messageElement.style.display = 'none';
+                }, 3000);
+            }
+            
+            // Акселерометр для хуртовини при трясінні
+            if (window.DeviceMotionEvent) {
+                let lastShake = 0;
+                
+                window.addEventListener('devicemotion', function(e) {
+                    const acceleration = e.acceleration;
+                    if (!acceleration) return;
+                    
+                    const currentTime = new Date().getTime();
+                    if (currentTime - lastShake < 2000) return;
+                    
+                    // Перевірка інтенсивності трясіння
+                    if (Math.abs(acceleration.x) > 15 || Math.abs(acceleration.y) > 15 || Math.abs(acceleration.z) > 15) {
+                        lastShake = currentTime;
+                        startSnowStorm();
+                    }
+                });
+            }
+            
+            function animate() {
+                // Основний цикл анімації
+                requestAnimationFrame(animate);
+            }
+            
+            // Запуск анімації
+            animate();
         });
-      });
-    }
-
-    // Particle system for snow
-    function initSnowParticles() {
-      const geometry = new THREE.BufferGeometry();
-      geometry.setAttribute('position', new THREE.BufferAttribute(snowPositions, 3));
-      
-      const material = new THREE.PointsMaterial({ 
-        color: 0xffffff, 
-        size: 0.04,
-        transparent: true, 
-        opacity: 0.9,
-        sizeAttenuation: true
-      });
-      
-      snowParticles = new THREE.Points(geometry, material);
-      scene.add(snowParticles);
-      snowGeometry = geometry;
-    }
-
-    function spawnSnowflake() {
-      if (snowCount >= 50) return;
-      
-      const index = snowCount * 3;
-      const x = (Math.random() - 0.5) * 3.5;
-      const z = (Math.random() - 0.5) * 2.5 - 0.5;
-      const y = 3;
-
-      snowPositions[index] = x;
-      snowPositions[index + 1] = y;
-      snowPositions[index + 2] = z;
-
-      snowVelocities[index] = 0;
-      snowVelocities[index + 1] = -0.5 - Math.random() * 0.3;
-      snowVelocities[index + 2] = 0;
-
-      snowActive[snowCount] = 1;
-      snowCount++;
-      
-      snowGeometry.attributes.position.needsUpdate = true;
-    }
-
-    function updateSnow() {
-      physicsFrameCounter++;
-      if (physicsFrameCounter % 3 !== 0) return;
-
-      const dt = 1/60;
-
-      for (let i = 0; i < snowCount; i++) {
-        if (!snowActive[i]) continue;
-        
-        const index = i * 3;
-
-        // Add shake effect
-        if (shakeIntensity > 10) {
-          snowVelocities[index] += (Math.random() - 0.5) * shakeIntensity * 0.01;
-          snowVelocities[index + 2] += (Math.random() - 0.5) * shakeIntensity * 0.01;
-        }
-
-        // Gravity
-        snowVelocities[index + 1] -= 2 * dt;
-
-        // Update position
-        snowPositions[index] += snowVelocities[index] * dt;
-        snowPositions[index + 1] += snowVelocities[index + 1] * dt;
-        snowPositions[index + 2] += snowVelocities[index + 2] * dt;
-
-        // Check if snow hit the ground (AR plane)
-        if (snowPositions[index + 1] < 0.01) {
-          const key = `${Math.round(snowPositions[index]*10)}_${Math.round(snowPositions[index + 2]*10)}`;
-          snowHeightMap[key] = (snowHeightMap[key] || 0) + 0.001;
-          updateLetterDisplacement();
-
-          // Remove snowflake
-          snowActive[i] = 0;
-          snowCount--;
-          
-          // Shift array
-          if (i < snowCount) {
-            const tempPos = snowPositions.slice(index + 3, (snowCount + 1) * 3);
-            snowPositions.set(tempPos, index);
-            const tempVel = snowVelocities.slice(index + 3, (snowCount + 1) * 3);
-            snowVelocities.set(tempVel, index);
-            snowActive.set(snowActive.slice(i + 1), i);
-          }
-        }
-      }
-
-      snowGeometry.attributes.position.needsUpdate = true;
-    }
-
-    function updateLetterDisplacement() {
-      if (!letter || !letter.geometry.attributes.position) return;
-      
-      const positions = letter.geometry.attributes.position.array;
-      const gridSize = 32;
-      
-      for (let i = 0; i < gridSize * gridSize; i++) {
-        const x = (i % gridSize) / gridSize * 2.8 - 1.4;
-        const z = Math.floor(i / gridSize) / gridSize * 3.8 - 1.9;
-        const key = `${Math.round(x*10)}_${Math.round(z*10)}`;
-        const height = snowHeightMap[key] || 0;
-        
-        const vertIndex = i * 3 + 1;
-        positions[vertIndex] = height * 0.1;
-      }
-      
-      letter.geometry.attributes.position.needsUpdate = true;
-      letter.geometry.computeVertexNormals();
-    }
-
-    // Device motion for shake detection
-    window.addEventListener('devicemotion', e => {
-      const acc = e.accelerationIncludingGravity;
-      if (acc) {
-        shakeIntensity = Math.abs(acc.x) + Math.abs(acc.y) + Math.abs(acc.z) - 9.8;
-      }
-    });
-
-    // Create Christmas letter
-    function createChristmasLetter() {
-      if (letter) scene.remove(letter);
-      
-      const letterGeometry = new THREE.PlaneGeometry(2.8, 3.8, 32, 32);
-      const letterTexture = createChristmasTexture();
-      
-      const letterMaterial = new THREE.MeshLambertMaterial({ 
-        map: letterTexture,
-        transparent: true,
-        opacity: 0.95,
-        side: THREE.DoubleSide
-      });
-      
-      letter = new THREE.Mesh(letterGeometry, letterMaterial);
-      letter.position.set(0, 0, 0);
-      letter.rotation.x = -Math.PI / 2;
-      scene.add(letter);
-
-      addChristmasDecorations();
-    }
-
-    function createChristmasTexture() {
-      const t = translations[currentLang];
-      const canvas = document.createElement('canvas');
-      canvas.width = 512;
-      canvas.height = 512;
-      const ctx = canvas.getContext('2d');
-      
-      // Background
-      const gradient = ctx.createLinearGradient(0, 0, 512, 512);
-      gradient.addColorStop(0, '#fff8e1');
-      gradient.addColorStop(1, '#ffecb3');
-      ctx.fillStyle = gradient;
-      ctx.fillRect(0, 0, 512, 512);
-      
-      // Snowflakes pattern
-      ctx.fillStyle = 'rgba(211, 47, 47, 0.1)';
-      for (let i = 0; i < 100; i++) {
-        const x = Math.random() * 512;
-        const y = Math.random() * 512;
-        const size = Math.random() * 20 + 5;
-        ctx.beginPath();
-        ctx.arc(x, y, size, 0, Math.PI * 2);
-        ctx.fill();
-      }
-      
-      // Border
-      ctx.strokeStyle = '#ffd700';
-      ctx.lineWidth = 12;
-      ctx.strokeRect(25, 25, 462, 462);
-      
-      // Title
-      ctx.fillStyle = '#d32f2f';
-      ctx.font = 'bold 30px Georgia';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText(t.header, 256, 60);
-      
-      const texture = new THREE.CanvasTexture(canvas);
-      return texture;
-    }
-
-    function addChristmasDecorations() {
-      for (let i = 0; i < 4; i++) {
-        const snowGeometry = new THREE.SphereGeometry(0.03, 4, 4);
-        const snowMaterial = new THREE.MeshBasicMaterial({ 
-          color: 0xffffff,
-          transparent: true,
-          opacity: 0.8
-        });
-        
-        const snowflake = new THREE.Mesh(snowGeometry, snowMaterial);
-        snowflake.position.set(
-          (Math.random() - 0.5) * 4,
-          (Math.random() - 0.5) * 3 + 1,
-          -0.5 + Math.random() * 0.5
-        );
-        
-        scene.add(snowflake);
-      }
-    }
-
-    // Animation loop
-    function animate() {
-      // Finger trail
-      if (fingerTrail.length > 20) {
-        scene.remove(fingerTrail.shift());
-      }
-      
-      fingerTrail.forEach((point, index) => {
-        point.material.opacity = 1 - (index / fingerTrail.length);
-        point.scale.multiplyScalar(0.98);
-      });
-      
-      // Letter animation
-      if (letter) {
-        letter.rotation.y = Math.sin(Date.now() * 0.001) * 0.02;
-        letter.rotation.x = -Math.PI / 2 + Math.sin(Date.now() * 0.0007) * 0.01;
-      }
-
-      renderer.render(scene, camera);
-    }
-
-    // MediaPipe Hands
-    function onResults(results) {
-      const t = translations[currentLang];
-      
-      if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
-        const landmarks = results.multiHandLandmarks[0];
-        
-        const tip = landmarks[8];
-        const pip = landmarks[6];
-        const mcp = landmarks[5];
-
-        const tipToPipDist = Math.sqrt(
-          Math.pow(tip.x - pip.x, 2) + 
-          Math.pow(tip.y - pip.y, 2)
-        );
-        
-        const mcpToPipDist = Math.sqrt(
-          Math.pow(mcp.x - pip.x, 2) + 
-          Math.pow(mcp.y - pip.y, 2)
-        );
-
-        const isFingerExtended = tipToPipDist > mcpToPipDist * 0.6;
-
-        const ndcX = (tip.x - 0.5) * 3.5;
-        const ndcY = -(tip.y - 0.5) * 2.8;
-        const vector = new THREE.Vector3(ndcX, ndcY, 0);
-
-        if (isFingerExtended) {
-          if (!isDrawing) {
-            isDrawing = true;
-            currentPath = [];
-            status.textContent = t.status.drawing;
-            status.classList.add('pulse');
-          }
-          
-          currentPath.push(vector.clone());
-          addFingerTrail(vector.clone());
-          
-        } else {
-          if (isDrawing) {
-            isDrawing = false;
-            addTextToLetter(currentPath);
-            currentPath = [];
-            status.textContent = t.status.done;
-            status.classList.remove('pulse');
-            status.classList.add('success');
-            setTimeout(() => status.classList.remove('success'), 2000);
-          }
-        }
-      } else {
-        if (isDrawing) {
-          isDrawing = false;
-          addTextToLetter(currentPath);
-          currentPath = [];
-          status.classList.remove('pulse');
-        }
-        status.textContent = t.status.initial;
-      }
-    }
-
-    function addFingerTrail(position) {
-      const geometry = new THREE.SphereGeometry(0.04, 6, 6);
-      const material = new THREE.MeshBasicMaterial({ 
-        color: 0xffd700,
-        transparent: true,
-        opacity: 0.9
-      });
-      
-      const sphere = new THREE.Mesh(geometry, material);
-      sphere.position.copy(position);
-      scene.add(sphere);
-      
-      fingerTrail.push(sphere);
-    }
-
-    function addTextToLetter(path) {
-      if (path.length < 3) return;
-
-      const curve = new THREE.CatmullRomCurve3(path);
-      
-      const geometry = new THREE.TubeGeometry(curve, Math.min(path.length, 50) * 2, 0.035, 6, false);
-      const material = new THREE.MeshBasicMaterial({ color: 0xc62828 });
-      
-      const tube = new THREE.Mesh(geometry, material);
-      textGroup.add(tube);
-
-      // Add glow effect every 5th stroke
-      if (textGroup.children.length % 5 === 0) {
-        const glowGeometry = new THREE.TubeGeometry(curve, Math.min(path.length, 50) * 2, 0.045, 6, false);
-        const glowMaterial = new THREE.MeshBasicMaterial({ 
-          color: 0xffd700,
-          transparent: true,
-          opacity: 0.3
-        });
-        
-        const glow = new THREE.Mesh(glowGeometry, glowMaterial);
-        textGroup.add(glow);
-      }
-
-      // Add snow effects along the path
-      for (let i = 0; i < path.length; i += 5) {
-        setTimeout(() => {
-          const snow = new THREE.Mesh(
-            new THREE.SphereGeometry(0.015, 4, 4),
-            new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.8 })
-          );
-          snow.position.copy(path[i]);
-          snow.position.y += 0.02;
-          letter.add(snow);
-
-          setTimeout(() => letter.remove(snow), 3000);
-        }, i * 50);
-      }
-    }
-
-    // Camera management
-    async function startCamera() {
-      try {
-        videoElement = document.getElementById('video');
-        
-        let constraints = {
-          video: {
-            facingMode: { exact: currentCamera },
-            width: { ideal: 640 },
-            height: { ideal: 480 }
-          }
-        };
-
-        cameraStream = await navigator.mediaDevices.getUserMedia(constraints);
-        videoElement.srcObject = cameraStream;
-        cameraWarning.style.display = 'none';
-        cameraWarningShown = false;
-        
-        if (window.camera) {
-          window.camera.stop();
-        }
-        
-        window.camera = new Camera(videoElement, {
-          onFrame: async () => {
-            await hands.send({image: videoElement});
-          },
-          width: 320,
-          height: 240
-        });
-        
-        await window.camera.start();
-        
-        console.log('Camera started:', currentCamera);
-        status.textContent = `🎅 Using ${currentCamera === 'environment' ? 'rear' : 'front'} camera...`;
-        
-      } catch (error) {
-        console.error('Camera error:', error);
-        
-        if (currentCamera === 'environment' && !cameraWarningShown) {
-          currentCamera = 'user';
-          cameraWarningShown = true;
-          cameraWarning.textContent = translations[currentLang].cameraWarning;
-          cameraWarning.style.display = 'block';
-          setTimeout(startCamera, 500);
-        } else {
-          status.textContent = 'Error: Camera access denied. Please refresh.';
-        }
-      }
-    }
-
-    // Switch camera
-    async function switchCamera() {
-      if (cameraStream) {
-        cameraStream.getTracks().forEach(track => track.stop());
-      }
-      
-      currentCamera = currentCamera === 'environment' ? 'user' : 'environment';
-      await startCamera();
-    }
-
-    // Clear text
-    function clearText() {
-      const t = translations[currentLang];
-      while (textGroup.children.length > 0) {
-        textGroup.remove(textGroup.children[0]);
-      }
-      snowHeightMap = {};
-      if (letter) updateLetterDisplacement();
-      status.textContent = t.status.clear;
-      status.classList.add('success');
-      setTimeout(() => {
-        status.textContent = t.status.initial;
-        status.classList.remove('success');
-      }, 2000);
-    }
-
-    // Language switching
-    function switchLanguage(lang) {
-      currentLang = lang;
-      const t = translations[currentLang];
-      
-      document.title = t.title;
-      status.textContent = t.status.initial;
-      
-      document.getElementById('instructions').innerHTML = `
-        <h3>${t.instructions.title}</h3>
-        <p>${t.instructions.step1}</p>
-        <p>${t.instructions.step2}</p>
-        <p>${t.instructions.step3}</p>
-        <p>${t.instructions.step4}</p>
-        <p>${t.instructions.step5}</p>
-      `;
-      
-      clearBtn.textContent = t.buttons.clear;
-      recordBtn.textContent = isRecording ? t.buttons.stop : t.buttons.record;
-      langBtn.textContent = t.buttons.lang;
-      cameraBtn.textContent = t.buttons.camera;
-      
-      if (cameraWarningShown) {
-        cameraWarning.textContent = t.cameraWarning;
-      }
-      
-      createChristmasLetter();
-    }
-
-    // Recording functions
-    function startRecording() {
-      const t = translations[currentLang];
-      recordedChunks = [];
-      
-      try {
-        const stream = renderer.domElement.captureStream(15);
-        mediaRecorder = new MediaRecorder(stream, { 
-          mimeType: 'video/webm; codecs=vp8'
-        });
-
-        mediaRecorder.ondataavailable = e => {
-          if (e.data.size > 0) recordedChunks.push(e.data);
-        };
-        
-        mediaRecorder.onstop = () => {
-          const blob = new Blob(recordedChunks, { type: 'video/webm' });
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          a.href = url;
-          a.download = `christmas-ar-letter-${Date.now()}.webm`;
-          a.click();
-          URL.revokeObjectURL(url);
-          
-          status.textContent = t.status.saved;
-          status.classList.add('success');
-          setTimeout(() => status.textContent = t.status.initial, 3000);
-        };
-
-        mediaRecorder.start();
-        isRecording = true;
-        recordBtn.textContent = t.buttons.stop;
-        recordBtn.classList.add('recording');
-        status.textContent = t.status.recording;
-      } catch (error) {
-        status.textContent = 'Recording not supported';
-      }
-    }
-
-    function stopRecording() {
-      const t = translations[currentLang];
-      if (mediaRecorder) mediaRecorder.stop();
-      isRecording = false;
-      recordBtn.textContent = t.buttons.record;
-      recordBtn.classList.remove('recording');
-    }
-
-    // Main initialization
-    async function initializeApp() {
-      try {
-        createSnowflakes();
-        initAR();
-
-        // MediaPipe Hands setup
-        hands = new Hands({
-          locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
-        });
-
-        hands.setOptions({
-          maxNumHands: 1,
-          modelComplexity: 0,
-          minDetectionConfidence: 0.5,
-          minTrackingConfidence: 0.5
-        });
-
-        hands.onResults(onResults);
-
-        // Start camera
-        await startCamera();
-
-        // Event listeners
-        langBtn.onclick = () => switchLanguage(currentLang === 'en' ? 'uk' : 'en');
-        cameraBtn.onclick = switchCamera;
-        clearBtn.onclick = clearText;
-        
-        recordBtn.onclick = () => {
-          if (isRecording) stopRecording();
-          else startRecording();
-        };
-
-        window.addEventListener('resize', () => {
-          camera.aspect = window.innerWidth / window.innerHeight;
-          camera.updateProjectionMatrix();
-          renderer.setSize(window.innerWidth, window.innerHeight);
-        });
-
-      } catch (error) {
-        console.error('Initialization error:', error);
-        status.textContent = 'Error: ' + error.message;
-      }
-    }
-
-    window.addEventListener('load', initializeApp);
-  </script>
+    </script>
 </body>
 </html>
